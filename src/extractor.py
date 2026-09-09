@@ -4,7 +4,10 @@ import re
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+import os
+import time
+
+NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 analyzer = AnalyzerEngine()
 anonymizer = AnonymizerEngine()
 
@@ -13,15 +16,43 @@ def scrub_pii(text: str) -> str:
     return anonymizer.anonymize(text=text, analyzer_results=results).text
 
 def call_llm(prompt: str, json_format: bool = False) -> str:
-    payload = {"model": "gemma4", "prompt": prompt, "stream": False, "options": {"temperature": 0.0}}
-    if json_format: payload["format"] = "json"
-    try:
-        response = requests.post(OLLAMA_URL, json=payload)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except Exception as e:
-        print(f"Error calling LLM: {e}")
+    api_key = os.environ.get("NVIDIA_API_KEY")
+    if not api_key:
+        print("ERROR: NVIDIA_API_KEY not set.")
         return ""
+        
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.0,
+        "max_tokens": 4096
+    }
+    # Currently NVIDIA NIM doesn't support strict JSON format flag universally, 
+    # but the prompt asks for JSON.
+    for attempt in range(5):
+        try:
+            response = requests.post(NVIDIA_URL, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            text = response.json()["choices"][0]["message"]["content"].strip()
+            
+            # Clean CoT just in case
+            if "Here's a thinking process:" in text:
+                parts = text.split("Here's a thinking process:")
+                if len(parts) > 1:
+                    pass # We will rely on json.loads downstream
+            return text
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429:
+                time.sleep(5 * (attempt + 1))
+            else:
+                return ""
+        except Exception as e:
+            return ""
+    return ""
 
 def merge_graphs(master, new_data):
     if not new_data: return master
@@ -70,6 +101,10 @@ def extract_rlm(conversation_file: str):
         print(f"Extracting chunk {idx+1}/{len(chunks)}...")
         sub_prompt = f"Extract data matching this JSON schema: {dynamic_schema}. Ensure you retain verbatim user details. Text: {chunk}"
         raw_extraction = call_llm(sub_prompt, json_format=True)
+        # Robustly extract JSON to bypass CoT
+        match = re.search(r'\{.*\}', raw_extraction, re.DOTALL)
+        if match:
+            raw_extraction = match.group(0)
         try:
             parsed = json.loads(raw_extraction)
             master_graph = merge_graphs(master_graph, parsed)

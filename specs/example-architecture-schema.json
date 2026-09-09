@@ -1,0 +1,120 @@
+{
+  "global_objective": {
+    "node_id": "goal_01",
+    "value": "Design a lossless, state-of-the-art context compaction architecture for multi-turn LLM conversations with progressive disclosure",
+    "status": "architectural_blueprint_finalized"
+  },
+  "semantic_memory": {
+    "core_architecture_nodes": [
+      {
+        "node_id": "arch_01",
+        "concept": "Recursive Language Model (RLM)",
+        "role": "Engine",
+        "provenance": {
+          "source_turn": 8,
+          "confidence": "high",
+          "status": "user_validated"
+        }
+      },
+      {
+        "node_id": "arch_02",
+        "concept": "Python REPL sandbox",
+        "role": "Execution Environment",
+        "provenance": {
+          "source_turn": 9,
+          "confidence": "high",
+          "status": "explicitly_stated"
+        }
+      },
+      {
+        "node_id": "arch_03",
+        "concept": "Knowledge Graph (Nodes/Edges)",
+        "role": "Data Structure",
+        "provenance": {
+          "source_turn": 12,
+          "confidence": "high",
+          "status": "user_enforced"
+        }
+      }
+    ],
+    "universal_ontology_rules": [
+      {
+        "rule": "Must track Semantic, Episodic, Procedural, and Active states",
+        "provenance": {
+          "source_turn": 11,
+          "status": "agreed_upon"
+        }
+      },
+      {
+        "rule": "All facts must contain provenance (source_turn) and confidence metadata",
+        "provenance": {
+          "source_turn": 11,
+          "status": "agreed_upon"
+        }
+      }
+    ]
+  },
+  "episodic_ledger": {
+    "graveyard_and_decisions": [
+      {
+        "event_id": "event_01",
+        "type": "branch_rejection",
+        "abandoned_path": "Standard LLM rolling summaries",
+        "causality": "Suffers from context amnesia and recursive information loss",
+        "source_turn": 5
+      },
+      {
+        "event_id": "event_02",
+        "type": "branch_rejection",
+        "abandoned_path": "Agent pseudo-RLM (multi-pass without REPL)",
+        "causality": "User correction: True RLMs start blind, discover domain via peeking, and extract using Python loops",
+        "source_turn": 9,
+        "overrides_node": "arch_multi_pass_pipeline"
+      }
+    ]
+  },
+  "procedural_memory": {
+    "system_instructions": [
+      {
+        "instruction": "Maintain strict architectural accuracy; immediately correct AI hallucinations regarding system mechanics.",
+        "priority": "critical"
+      },
+      {
+        "instruction": "Do not omit generated artifact payloads from the summary state. Serialize them inline if no external database exists.",
+        "priority": "critical",
+        "source_turn": 16
+      }
+    ]
+  },
+  "active_state": {
+    "current_micro_goal": "Output the final, self-contained JSON state graph containing all inline artifact payloads",
+    "pending_blockers": "None",
+    "active_branches": []
+  },
+  "inline_artifacts": [
+    {
+      "artifact_id": "schema_baseline_v1",
+      "type": "json_template",
+      "description": "The initial 3-tier state extraction schema (Semantic, Episodic, Active)",
+      "payload": "{\n  \"semantic_memory\": {\n    \"user_constraints\": [],\n    \"verified_facts\": []\n  },\n  \"episodic_ledger\": {\n    \"decisions_made\": [],\n    \"discarded_paths\": []\n  },\n  \"active_state\": {\n    \"current_goal\": \"\",\n    \"pending_blockers\": [],\n    \"next_immediate_action\": \"\"\n  }\n}"
+    },
+    {
+      "artifact_id": "prompt_schema_induction",
+      "type": "system_prompt",
+      "description": "The Meta-Prompt for Zero-Shot Schema Induction and Dialogue State Tracking",
+      "payload": "You are an analytical state-tracking engine. Read the following dialogue transcript. You do not know the domain in advance. Your task is to identify the tracking variables the user cares about. Look for these Dialogue Acts: 1. Inform Requirement: What hard boundaries did the user set? 2. Critique / Update: Did the user reject something? What feature caused the rejection? Output a JSON Schema defining the keys that must be tracked for this specific conversation. Do NOT extract the values yet. Just define the variables."
+    },
+    {
+      "artifact_id": "rlm_repl_trace_core",
+      "type": "python_code",
+      "description": "The 5-step Python execution trace for the Root RLM handling domain peeking, filtering, and recursive sub-calls",
+      "payload": "# 1. Peek\nhead = transcript[:1500]\nprint(\"Domain context:\", llm_query(f\"What is the domain? Text: {head}\"))\n\n# 2. Filter\nimport re\nuser_turns = re.findall(r'User:\\s*(.*?)(?=Assistant:|$)', transcript, re.DOTALL)\n\n# 3. Recursive Extract\nraw_extractions = []\nbatch_size = 5\nfor i in range(0, len(user_turns), batch_size):\n    batch = user_turns[i:i+batch_size]\n    sub_prompt = f\"Extract data matching this JSON schema: {dynamic_schema}. Text: {batch}\"\n    raw_extractions.append(llm_query(sub_prompt))\n\n# 4. Code-Driven Merge\nfinal_state = initialize_empty_state(dynamic_schema)\nfor extraction in raw_extractions:\n    final_state = apply_deltas(current_state=final_state, new_data=extraction)\n\n# 5. Submit\nSUBMIT(final_state)"
+    },
+    {
+      "artifact_id": "ontology_universal_v2",
+      "type": "architectural_blueprint",
+      "description": "The final 4-part Universal Ontology including Procedural Memory and Provenance metadata",
+      "payload": "1. Semantic Memory (Facts & Entities): Hard constraints, soft preferences, and user profile/inventory. (Must include source_turn). 2. Episodic Ledger (Events & Graveyard): Chronological log of decisions made, rejected branches, and specific critiques. (Must include source_turn and reason). 3. Procedural Memory (Rules of Engagement): Behavioral instructions the user has given the assistant regarding output format, tone, or tool usage. 4. Active State (Working Memory): The immediate micro-goal, pending blockers, and active branch context."
+    }
+  ]
+}
