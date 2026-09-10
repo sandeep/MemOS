@@ -34,7 +34,14 @@ To test if we can build this resilient infrastructure, we designed an experiment
 
 ---
 
-## 4. Conclusion
-The experiment conclusively proves that building a background memory infrastructure for a Local AI OS cannot rely on static parsing scripts, especially when utilizing low-power/low-cost models. The moment a local model deviates from strict JSON, static infrastructure breaks (as seen in our 0% baseline run). 
+## 4. Conclusion: The Power of Dynamic Infrastructure
+Building a continuous, self-organizing memory layer for a Local AI OS cannot rely on static parsing scripts. As our baseline proved, traditional extraction infrastructure is brittle; the moment a low-power, local model deviates from strict JSON (such as outputting markdown or conversational filler), the entire pipeline crashes.
 
-By utilizing a Recursive Language Model (RLM) meta-prompt, the system dynamically writes, sandboxes, and executes its own resilient extraction logic, recovering from model drift and achieving 85% fidelity without human intervention. This dynamic infrastructure is the missing layer required to truly power a continuous, self-organizing Local OS.
+By utilizing a Recursive Language Model (RLM) architecture, we shift the burden of parsing away from hardcoded logic and back onto the model itself. The RLM dynamically writes, sandboxes, and executes its own resilient extraction code—actively creating custom regex rules to bypass its own hallucinations. This allows us to achieve an impressive 85% fidelity rate without human intervention, using only a cheap, low-power proxy model.
+
+This dynamic infrastructure is the missing layer required to truly power a continuous Local OS. 
+
+**Next Steps:** While our 4-Part Knowledge Graph was a strong start, our next phase of research will focus on tuning the RLM meta-prompt for *Propositional Extraction*—breaking conversations down into atomic, self-contained facts to preserve even higher conversational nuance.
+
+The entire RLM extraction pipeline, the evaluation judge, and the centralized caching utilities are open-source. You can view the code, run the extractor in a secure Podman sandbox, and build your own local memory pipelines here: 
+**[https://github.com/sandeep/MemOS](https://github.com/sandeep/MemOS)**
