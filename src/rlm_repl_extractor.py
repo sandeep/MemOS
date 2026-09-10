@@ -1,54 +1,11 @@
 import json
-import requests
-import io
 import sys
 import contextlib
 import multiprocessing
 import os
 import time
 import re
-
-NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-
-def call_llm(prompt: str) -> str:
-    api_key = os.environ.get("NVIDIA_API_KEY")
-    if not api_key:
-        print("ERROR: NVIDIA_API_KEY not set.")
-        return ""
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.0,
-        "max_tokens": 4096
-    }
-    for attempt in range(5):
-        try:
-            response = requests.post(NVIDIA_URL, headers=headers, json=payload)
-            response.raise_for_status()
-            text = response.json()["choices"][0]["message"]["content"].strip()
-            
-            with open("llm_calls.log", "a") as f:
-                f.write(f"========== ATTEMPT {attempt+1} PROMPT ==========\n{prompt}\n")
-                f.write(f"========== RAW RESPONSE ==========\n{text}\n\n")
-
-            if "Here's a thinking process:" in text:
-                parts = text.split("Here's a thinking process:")
-                if len(parts) > 1:
-                    pass
-            return text
-        except requests.exceptions.HTTPError as e:
-            if response.status_code == 429:
-                time.sleep(5 * (attempt + 1))
-            else:
-                return ""
-        except Exception as e:
-            return ""
-    return ""
+from llm_utils import call_llm
 
 def _run_exec(code, globals_dict, output_queue):
     try:

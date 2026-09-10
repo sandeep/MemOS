@@ -1,40 +1,8 @@
 import json
-import requests
 import sys
 import re
 import os
-
-NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-
-def call_llm(prompt: str, model: str = "nvidia/nemotron-3-ultra-550b-a55b", temp: float = 0.0) -> str:
-    api_key = os.environ.get("NVIDIA_API_KEY")
-    if not api_key:
-        print("ERROR: NVIDIA_API_KEY not set.")
-        return ""
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": temp,
-        "max_tokens": 1024
-    }
-    try:
-        response = requests.post(NVIDIA_URL, headers=headers, json=payload)
-        response.raise_for_status()
-        text = response.json()["choices"][0]["message"]["content"].strip()
-        # Clean CoT
-        if "Here's a thinking process:" in text:
-            parts = text.split("\n\n")
-            if len(parts) > 1:
-                text = "\n\n".join(parts[1:]).strip()
-        return text
-    except Exception as e:
-        print(f"LLM Error: {e}")
-        return ""
+from llm_utils import call_llm
 
 def run_llm_judge(transcript_file: str, kg_file: str):
     with open(transcript_file, 'r') as f:

@@ -1,0 +1,9 @@
+I notice you've provided a text excerpt and mentioned a JSON schema, but the schema itself wasn't included in your message (the `.` after `schema:` appears to be a placeholder). 
+
+Additionally, the text you shared is an excerpt about art criticism, tastemakers, Kantian judgment, and the economics of art—it doesn't contain typical "user details" like names, emails, or identifiers.
+
+To help you properly:
+1. **Please share the full JSON schema** you want the data extracted/matched against.
+2. **Clarify what "verbatim user details" you'd like retained** (the current text is content, not personal data, so let me know if you're referring to a specific field, author attribution, or something else).
+
+Once I have the schema, I'll extract and format the relevant portions of the text exactly as requested.

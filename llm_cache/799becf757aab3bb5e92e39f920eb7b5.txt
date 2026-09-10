@@ -1,0 +1,5 @@
+No JSON schema was included in your request. To extract data matching your specification, please share the full JSON schema you'd like me to use.
+
+Additionally, the provided text appears to end mid-sentence (`This is a diagnostic proc`), so I'll work with whatever portion is complete once I have the schema.
+
+If you'd like me to restructure or parse the existing text into a generic format (e.g., key-value pairs, sections, or a placeholder schema) while keeping the content verbatim, just let me know your preferred output structure.

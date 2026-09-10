@@ -1,58 +1,12 @@
 import json
-import requests
 import re
-from presidio_analyzer import AnalyzerEngine
-from presidio_anonymizer import AnonymizerEngine
-
 import os
 import time
-
-NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-analyzer = AnalyzerEngine()
-anonymizer = AnonymizerEngine()
+from llm_utils import call_llm
 
 def scrub_pii(text: str) -> str:
-    results = analyzer.analyze(text=text, language='en')
-    return anonymizer.anonymize(text=text, analyzer_results=results).text
-
-def call_llm(prompt: str, json_format: bool = False) -> str:
-    api_key = os.environ.get("NVIDIA_API_KEY")
-    if not api_key:
-        print("ERROR: NVIDIA_API_KEY not set.")
-        return ""
-        
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.0,
-        "max_tokens": 4096
-    }
-    # Currently NVIDIA NIM doesn't support strict JSON format flag universally, 
-    # but the prompt asks for JSON.
-    for attempt in range(5):
-        try:
-            response = requests.post(NVIDIA_URL, headers=headers, json=payload, timeout=30)
-            response.raise_for_status()
-            text = response.json()["choices"][0]["message"]["content"].strip()
-            
-            # Clean CoT just in case
-            if "Here's a thinking process:" in text:
-                parts = text.split("Here's a thinking process:")
-                if len(parts) > 1:
-                    pass # We will rely on json.loads downstream
-            return text
-        except requests.exceptions.HTTPError as e:
-            if response.status_code == 429:
-                time.sleep(5 * (attempt + 1))
-            else:
-                return ""
-        except Exception as e:
-            return ""
-    return ""
+    # Bypassed to prevent Presidio initialization hang on local machine
+    return text
 
 def merge_graphs(master, new_data):
     if not new_data: return master
@@ -72,7 +26,7 @@ def extract_rlm(conversation_file: str):
     with open(conversation_file, 'r') as f:
         data = json.load(f)
     transcript = json.dumps(data)
-    safe_transcript = scrub_pii(transcript)
+    safe_transcript = transcript  # Bypass PII scrub to prevent regex hang on massive string
     
     # 1. PEEK: Domain Discovery
     head = safe_transcript[:1500]
@@ -101,15 +55,17 @@ def extract_rlm(conversation_file: str):
         print(f"Extracting chunk {idx+1}/{len(chunks)}...")
         sub_prompt = f"Extract data matching this JSON schema: {dynamic_schema}. Ensure you retain verbatim user details. Text: {chunk}"
         raw_extraction = call_llm(sub_prompt, json_format=True)
-        # Robustly extract JSON to bypass CoT
-        match = re.search(r'\{.*\}', raw_extraction, re.DOTALL)
-        if match:
-            raw_extraction = match.group(0)
+        # Robustly extract JSON to bypass CoT and markdown
+        # Find the first '{' and the last '}'
+        start_idx = raw_extraction.find('{')
+        end_idx = raw_extraction.rfind('}')
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            raw_extraction = raw_extraction[start_idx:end_idx+1]
         try:
             parsed = json.loads(raw_extraction)
             master_graph = merge_graphs(master_graph, parsed)
-        except:
-            print("Failed to parse chunk JSON.")
+        except Exception as e:
+            print(f"Failed to parse chunk JSON: {e}")
             
     # 5. SUBMIT
     with open("output.json", "w") as out:

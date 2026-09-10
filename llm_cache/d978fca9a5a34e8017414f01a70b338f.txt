@@ -1,0 +1,19 @@
+1.  **Analyze User Input:**
+   - User wants me to "Extract data matching this JSON schema"
+   - The schema isn't explicitly provided in the prompt, but they say "Ensure you retain verbatim user details."
+   - There's a text block following the JSON schema mention: it starts with `, {"text": ".\n\n*   **Calibration of the Sensory Instrument:**...` and continues with multiple `{"text": "..."}` entries.
+   - Wait, the input format is a bit messy. Let me re-read carefully.
+
+   Input: `Extract data matching this JSON schema: . Ensure you retain verbatim user details. Text: , {"text": ".\n\n*   **Calibration of the Sensory Instrument:** The human palate, nose, and eyes are sensory instruments. Like"}`
+
+   Actually, the structure seems to be:
+   - Command: "Extract data matching this JSON schema: ."
+   - Then "Ensure you retain verbatim user details."
+   - Then "Text: , {"text": ".\n\n*   **Calibration of the Sensory Instrument:** The human palate, nose, and eyes are sensory instruments. Like"}`
+   - And then there are more `{"text": "..."}` blocks following.
+
+   It looks like the user provided a JSON-like text structure with fields named "text", containing a long passage about sensory instruments, calibration, lexicons, etc. The prompt says "Extract data matching this JSON schema" but doesn't specify the schema. However, the text itself is already in a JSON-like format: an array or list of objects with `{"text": "..."}`.
+
+   Let me look at the exact text provided:
+   ```
+   , {"text": ".\n\n*   **Calibration of the Sensory Instrument:** The human palate, nose, and eyes are sensory instruments. Like"}, {"text": " any scientific instrument, they can be calibrated. A master sommelier or a Q Grader (a certified coffee taster) has spent"}, {"text": " thousands of hours training their palate to identify and isolate specific chemical compounds. The \"note of cassis\" in a Cabernet"}, {"text": " Sauvignon is not a poetic flight of fancy; it is the sensory identification of a molecule called methoxypyrazine, which"}, {"text": " is also present in blackcurrants and green bell peppers. Their brain has built a vast library correlating specific sensory inputs with"}, {"text": " a precise chemical reality.\n*   **Development of a High-Resolution Lexicon:** You operate with the precise lexicon of your"}, {"text": " field\u2014\"scalability,\" \"technical debt,\" \"market penetration.\" These terms are meaningless to an outsider but represent complex, shared"}, {"text": " concepts for you. Similarly, the world of taste requires a specialized lexicon to convert raw sensory data into communicable information. Terms"}, {"text": " like \"terroir,\" \"tannic structure,\" \"acidity,\" \"body,\" and \"finish\" are not"}, {"text": " subjective feelings; they are technical descriptors of measurable or consistently identifiable phenomena. This lexicon allows for the crucial step from a private, subjective experience"}, {"text": " to a shared, intersubjective one.\n*   **

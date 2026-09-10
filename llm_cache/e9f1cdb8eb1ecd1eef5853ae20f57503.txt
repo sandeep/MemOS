@@ -1,0 +1,17 @@
+I notice the JSON schema you referenced wasn't included in your message. To extract data matching a specific schema, I'll need the schema definition (e.g., field names, types, structure, required/optional flags).
+
+That said, I've preserved the full text you provided verbatim below, as requested:
+
+```
+*tique of Judgment*, distinguished between judgments of the "agreeable" ("I like this wine") and judgments of the "beautiful" ("This is a beautiful wine"). The first is a purely personal statement. The second, however, contains an implicit claim to universality—it suggests that others *ought* to agree. The work of the professional tastemaker is to make and defend these universal-style claims. They must provide reasons, grounded in the shared lexicon and standards of their field, for their judgment.
+
+*   **Narrative and Scarcity:** Tastemakers are not just evaluating a physical object; they are often evaluating and amplifying its *narrative*. The story of the struggling artist, the difficult vintage year for the winemaker, the unique provenance of the coffee bean—these narratives add a layer of meaning that is inseparable from the object's perceived quality and, therefore, its price. Value in these domains is a function of (Quality + Scarcity + Narrative). The tastemaker is the authoritative narrator.
+
+*   **The Creation of New Markets:** Tastemakers don't just evaluate existing goods; they can create new categories of desire. An art critic championing a new movement or a coffee expert highlighting a previously unknown region's beans can literally create a new market out of thin air. They are venture capitalists of culture, identifying nascent potential and signaling to the market where future value may lie.
+
+### Synthesis for the Tech Executive
+
+Think of 
+```
+
+Please share the JSON schema you'd like me to match, and I'll extract/format the data accordingly while keeping all user details intact.

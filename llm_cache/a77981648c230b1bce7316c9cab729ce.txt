@@ -1,0 +1,9 @@
+The JSON schema you referenced appears to be empty or incomplete (just `.`). To extract data matching your specification, please provide the full JSON schema you'd like me to use.
+
+In the meantime, I've retained the verbatim text you shared below:
+
+```
+14gr"}, {"text": "ants an individual status and influence within that field. It is a signal of belonging to an in-group that possesses the knowledge to"}, {"text": " make fine distinctions. An art collector doesn't just buy a painting; they buy a marker of their own discerning judgment"}, {"text": ", thereby increasing their own social and cultural standing.\n*   **The Tastemaker as a Legitimizing Function:**"}, {"text": " Markets for goods whose value is not purely functional (art, fine wine, haute couture) are rife with information asymmetry. The"}, {"text": " average consumer cannot distinguish a truly great wine from a merely good one, or a masterpiece from a clever imitation. The tastemaker"}, {"text": "\u2014the critic, the curator, the collector\u2014serves as a trusted node in the network. Their public judgment performs"}, {"text": " a crucial economic function: it *reduces uncertainty* and *creates a focal point for value*. When a prominent critic awards"}, {"text": " a wine 98 points, they are not describing a feeling; they are issuing a vetted, trusted signal to the market that says"}, {"text": ", \"This object is worthy of your attention and financial investment.\" They are, in effect, underwriting the object's value with"}, {"text": " their own accumulated cultural capital.\n*   **Constructing Intersubjective Reality:** These fields are not \"made"}, {"text": " up\" so much as they are *socially constructed*. This construction, however, follows its own internal l"
+```
+
+Once you share the complete schema, I’ll extract and format the data accordingly while preserving all user details exactly as provided.
