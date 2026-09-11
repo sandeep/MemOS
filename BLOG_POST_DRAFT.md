@@ -26,8 +26,8 @@ To test approaches for this infrastructure, we designed an experiment using a pr
 ## 3. The Results: Static Code vs. Dynamic Extraction
 
 **Baseline (Static Python Script):**
-*   **Fidelity Score:** 0% (Parsing Failure)
-*   **Notes:** The static script attempted to parse 47 chunks of the conversation using the proxy model. It failed to parse the JSON on every chunk. The smaller model struggled to adhere strictly to the requested schema without adding reasoning logs or markdown. Consequently, the hardcoded Python `json.loads()` failed to process the strings, highlighting the brittleness of traditional, non-semantic compaction architectures.
+*   **Fidelity Score:** 0% (Semantic Erasure)
+*   **Notes:** After fixing the parser to guarantee valid JSON extraction, the static script successfully generated the Knowledge Graph. However, because it used fixed-size chunking (3000 characters) and a rigid extraction loop, it aggressively compressed the text. When the 550B Judge queried the final graph for specific conversational nuances—such as the user's self-described persona or specific analogies—the baseline graph returned `MISSING` for every single question. It successfully extracted data, but it destroyed the *meaning* of the conversation, resulting in a 0% fidelity score.
 
 **Variable (Dynamic RLM - 4-Part Knowledge Graph):**
 *   **Fidelity Score:** 85%
