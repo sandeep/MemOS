@@ -43,7 +43,7 @@ def generate_answer_key(transcript_str: str) -> list:
 
 def retrieve_answers(kg_str: str) -> list:
     retrieved = []
-    for i, q in enumerate(QUESTIONS):
+    for q in QUESTIONS:
         prompt = f"Answer this question using ONLY the Knowledge Graph below. Keep answers to 1 sentence. If the info is missing, say 'MISSING'.\n\nQuestion:\n{q}\n\nKnowledge Graph:\n{kg_str}"
         ans = call_llm(prompt).strip()
         retrieved.append(ans)
@@ -51,14 +51,16 @@ def retrieve_answers(kg_str: str) -> list:
 
 def judge_answers(answer_key: list, retrieved: list) -> list:
     scores = []
-    for i, (base_ans, retr_ans) in enumerate(zip(answer_key, retrieved)):
+    for base_ans, retr_ans in zip(answer_key, retrieved):
         prompt = f"Compare the TRUE Answer to the Retrieved Answer. Did the Retrieved Answer miss any critical facts? Give a score out of 100 as a SINGLE INTEGER ONLY on the first line, followed by a 1-sentence explanation on the next line.\n\nTRUE Answer:\n{base_ans}\n\nRetrieved Answer:\n{retr_ans}"
         resp = call_llm(prompt).strip()
         
+        first_line = resp.splitlines()[0] if resp else ""
         try:
-            score_match = re.search(r'\d+', resp)
+            cleaned = re.sub(r'^(?:Q\d+[:.]?|\d+[\.\)]|\bScore\b:?)\s*', '', first_line.strip(), flags=re.IGNORECASE)
+            score_match = re.search(r'\b(100|\d{1,2})\b', cleaned) or re.search(r'\b(100|\d{1,2})\b', first_line)
             score = int(score_match.group()) if score_match else 0
-        except:
+        except (ValueError, AttributeError):
             score = 0
         scores.append(score)
     return scores
@@ -75,8 +77,8 @@ def run_pipeline(transcript_file: str, kg_files: list):
         try:
             with open(kg_file, 'r') as f:
                 kg_str = json.dumps(json.load(f))
-        except FileNotFoundError:
-            print(f"File {kg_file} not found. Skipping.")
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
+            print(f"Error loading {kg_file}: {e}. Skipping.")
             continue
             
         retrieved = retrieve_answers(kg_str)
