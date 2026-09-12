@@ -41,12 +41,57 @@ def generate_answer_key(transcript_str: str) -> list:
         answer_key.append(final_answer)
     return answer_key
 
+def retrieve_answers(kg_str: str) -> list:
+    retrieved = []
+    for i, q in enumerate(QUESTIONS):
+        prompt = f"Answer this question using ONLY the Knowledge Graph below. Keep answers to 1 sentence. If the info is missing, say 'MISSING'.\n\nQuestion:\n{q}\n\nKnowledge Graph:\n{kg_str}"
+        ans = call_llm(prompt).strip()
+        retrieved.append(ans)
+    return retrieved
+
+def judge_answers(answer_key: list, retrieved: list) -> list:
+    scores = []
+    for i, (base_ans, retr_ans) in enumerate(zip(answer_key, retrieved)):
+        prompt = f"Compare the TRUE Answer to the Retrieved Answer. Did the Retrieved Answer miss any critical facts? Give a score out of 100 as a SINGLE INTEGER ONLY on the first line, followed by a 1-sentence explanation on the next line.\n\nTRUE Answer:\n{base_ans}\n\nRetrieved Answer:\n{retr_ans}"
+        resp = call_llm(prompt).strip()
+        
+        try:
+            score_match = re.search(r'\d+', resp)
+            score = int(score_match.group()) if score_match else 0
+        except:
+            score = 0
+        scores.append(score)
+    return scores
+
 def run_pipeline(transcript_file: str, kg_files: list):
     with open(transcript_file, 'r') as f:
         transcript_str = json.dumps(json.load(f))[:8000]
         
     answer_key = generate_answer_key(transcript_str)
-    return answer_key
+    
+    results = {}
+    for kg_file in kg_files:
+        print(f"\n--- PHASE 2 & 3: EVALUATING {kg_file} ---")
+        try:
+            with open(kg_file, 'r') as f:
+                kg_str = json.dumps(json.load(f))
+        except FileNotFoundError:
+            print(f"File {kg_file} not found. Skipping.")
+            continue
+            
+        retrieved = retrieve_answers(kg_str)
+        scores = judge_answers(answer_key, retrieved)
+        
+        avg_score = sum(scores) / len(scores) if scores else 0
+        results[kg_file] = avg_score
+        print(f"Final Score for {kg_file}: {avg_score}%")
+        
+    print("\n======================================")
+    print("FINAL LEADERBOARD:")
+    for file, score in results.items():
+        print(f"{file}: {score}%")
+    print("======================================")
+    return results
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
