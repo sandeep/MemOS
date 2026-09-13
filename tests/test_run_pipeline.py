@@ -59,7 +59,9 @@ def test_main_single_file(tmp_path, monkeypatch, capsys):
 def test_main_file_not_found(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(sys, "argv", ["run_pipeline.py", "nonexistent.json"])
-    main()
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
     captured = capsys.readouterr().out
     assert "File not found: nonexistent.json" in captured
 

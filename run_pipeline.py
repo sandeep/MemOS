@@ -33,6 +33,7 @@ def main():
             process_file(arg)
         else:
             print(f"File not found: {arg}")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
