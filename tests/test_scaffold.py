@@ -1,9 +1,8 @@
 import os
-import shutil
 from src.scaffold import init_directories
 
-def test_init_directories(tmp_path):
-    os.chdir(tmp_path)
+def test_init_directories(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     init_directories()
     assert os.path.exists("data/secure/inputs")
     assert os.path.exists("data/secure/reconstituted")
