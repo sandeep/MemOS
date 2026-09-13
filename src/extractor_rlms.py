@@ -20,7 +20,7 @@ def scrub_pii(text: str) -> str:
     results = analyzer.analyze(text=text, language='en')
     return anonymizer.anonymize(text=text, analyzer_results=results).text
 
-def extract(conversation_file: str, prompt_file: str = None):
+def extract(conversation_file: str, prompt_file: str = None, output_file: str = "output_rlms.json"):
     with open(conversation_file, 'r') as f:
         data = json.load(f)
     
@@ -47,6 +47,10 @@ def extract(conversation_file: str, prompt_file: str = None):
         Save the final output JSON to 'output_rlms.json'.
         Make sure your python code executes quickly (under 30 seconds)."""
         
+    import re
+    # Ensure RLM writes to output_file instead of hardcoded
+    base_prompt = re.sub(r"output[a-zA-Z0-9_]*\.json", output_file, base_prompt)
+
     prompt = f"{base_prompt}\n\nTranscript:\n{safe_transcript[:5000]}"
     
     print("Running RLM completion...")
@@ -54,9 +58,11 @@ def extract(conversation_file: str, prompt_file: str = None):
     print("RLM Execution complete.")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 3:
+        extract(sys.argv[1], sys.argv[2], sys.argv[3])
+    elif len(sys.argv) > 2:
         extract(sys.argv[1], sys.argv[2])
     elif len(sys.argv) > 1:
         extract(sys.argv[1])
     else:
-        print("Usage: python src/extractor_rlms.py <transcript.json> [prompt.txt]")
+        print("Usage: python src/extractor_rlms.py <transcript.json> [prompt.txt] [output.json]")

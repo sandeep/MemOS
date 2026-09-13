@@ -34,7 +34,7 @@ def merge_graphs(master, new_data):
     master["active_state"] = new_data.get("active_state", master["active_state"])
     return master
 
-def extract_rlm(conversation_file: str):
+def extract_rlm(conversation_file: str, output_file: str = "output.json"):
     with open(conversation_file, 'r') as f:
         data = json.load(f)
     transcript = json.dumps(data)
@@ -76,10 +76,12 @@ def extract_rlm(conversation_file: str):
             print(f"Failed to parse chunk JSON: {e}")
             
     # 5. SUBMIT
-    with open("output.json", "w") as out:
+    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+    with open(output_file, "w") as out:
         json.dump(master_graph, out, indent=2)
     print("Baseline extraction complete.")
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1: extract_rlm(sys.argv[1])
+    if len(sys.argv) > 2: extract_rlm(sys.argv[1], sys.argv[2])
+    elif len(sys.argv) > 1: extract_rlm(sys.argv[1])
