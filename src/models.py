@@ -10,10 +10,10 @@ class EpisodicTriple(Triple):
     step: int
 
 class CognitiveGraphV2(BaseModel):
-    semantic: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Semantic', 'semantic'))
-    episodic: List[EpisodicTriple] = Field(default_factory=list, validation_alias=AliasChoices('Episodic', 'episodic'))
-    procedural: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Procedural', 'procedural'))
-    active: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Active', 'active'))
+    semantic: List[Triple] = Field(validation_alias=AliasChoices('Semantic', 'semantic'))
+    episodic: List[EpisodicTriple] = Field(validation_alias=AliasChoices('Episodic', 'episodic'))
+    procedural: List[Triple] = Field(validation_alias=AliasChoices('Procedural', 'procedural'))
+    active: List[Triple] = Field(validation_alias=AliasChoices('Active', 'active'))
 
 class SemanticMemoryV1(BaseModel):
     nodes: List[Dict[str, Any]] = Field(default_factory=list)

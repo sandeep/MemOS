@@ -57,10 +57,15 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
     response = rlm.completion(prompt)
     print("RLM Execution complete.")
 
-    if not os.path.exists(output_file) and response:
-        print(f"Agent did not create {output_file}. Saving raw stdout fallback...")
-        with open(output_file, 'w') as f:
-            f.write(response)
+    if (not os.path.exists(output_file) or os.path.getsize(output_file) == 0) and response:
+        print(f"Agent did not create {output_file} (or it was empty). Saving raw stdout fallback...")
+        if os.path.dirname(output_file):
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            try:
+                f.write(response.choices[0].message.content)
+            except Exception:
+                f.write(str(response))
 
 if __name__ == "__main__":
     if len(sys.argv) > 3:
