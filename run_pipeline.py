@@ -43,20 +43,28 @@ def process_file(input_path: str):
     kg_naive = os.path.join(eval_dir, f"kg_naive_{tag}.json")
     kg_rlms = os.path.join(eval_dir, f"kg_rlms_{tag}.json")
     kg_prop = os.path.join(eval_dir, f"kg_propositional_{tag}.json")
+    kg_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
     leaderboard = os.path.join(eval_dir, f"leaderboard_{tag}.md")
     
+    from src.validator import validate_schema
     # 1. Extract
     extract_rlm(scrubbed, kg_naive)
     extract(scrubbed, None, kg_rlms)
     extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)
+    extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2)
     
     # 2. Evaluate
     # Temporarily cd into eval_dir so answer_key gets saved with the date and model tag
     original_cwd = os.getcwd()
     os.chdir(eval_dir)
     try:
-        results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), 
-                                    [os.path.basename(kg_naive), os.path.basename(kg_rlms), os.path.basename(kg_prop)])
+        valid_kgs = []
+        for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
+            schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
+            if validate_schema(os.path.join(original_cwd, kg), schema):
+                valid_kgs.append(os.path.basename(kg))
+                
+        results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), valid_kgs)
         
         # 3. Write leaderboard
         with open(os.path.basename(leaderboard), "w") as f:
