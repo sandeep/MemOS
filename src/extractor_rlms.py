@@ -63,7 +63,7 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:
             try:
-                f.write(response.choices[0].message.content)
+                f.write(response.response)
             except Exception:
                 f.write(str(response))
 
