@@ -71,8 +71,11 @@ def process_file(input_path: str):
     # 4. Reconstitute
     reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
     reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
-    reconstitute(kg_prop, reconstituted_file)
-    print(f"Reconstituted KG to {reconstituted_file}")
+    try:
+        reconstitute(kg_prop, reconstituted_file)
+        print(f"Reconstituted KG to {reconstituted_file}")
+    except FileNotFoundError as e:
+        print(f"Skipping reconstitution for {base_name}: {e}")
 
 def main():
     init_directories()
@@ -84,7 +87,10 @@ def main():
     if arg == "--all":
         files = glob.glob("data/secure/inputs/*.json")
         for f in files:
-            process_file(f)
+            try:
+                process_file(f)
+            except Exception as e:
+                print(f"Error processing {f}: {e}")
     else:
         if os.path.exists(arg):
             process_file(arg)
