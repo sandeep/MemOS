@@ -17,6 +17,7 @@ except ImportError:
     def extract(conversation_file: str, prompt_file: str = None, output_file: str = "output_rlms.json"):
         raise RuntimeError("extract from extractor_rlms unavailable: missing 'rlm' package")
 from src.evaluator import run_pipeline as evaluate_pipeline
+from src.reconstitutor import reconstitute
 
 def copy_to_scrubbed(input_path: str) -> str:
     """Mock PII phase: just copy the file across the boundary."""
@@ -66,6 +67,12 @@ def process_file(input_path: str):
         os.chdir(original_cwd)
         
     print(f"Finished {base_name}. Leaderboard at {leaderboard}")
+        
+    # 4. Reconstitute
+    reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
+    reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
+    reconstitute(kg_prop, reconstituted_file)
+    print(f"Reconstituted KG to {reconstituted_file}")
 
 def main():
     init_directories()

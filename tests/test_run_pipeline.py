@@ -106,6 +106,13 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
         # Verify cwd restored
         assert os.getcwd() == str(tmp_path)
 
+        # Verify reconstitution and symlink
+        reconstituted_file = os.path.join("data/secure/reconstituted", "sample", f"kg_propositional_{tag}_reconstituted.json")
+        latest_symlink = os.path.join("data/secure/reconstituted", "sample", "latest.json")
+        assert os.path.exists(reconstituted_file)
+        assert os.path.islink(latest_symlink)
+        assert os.readlink(latest_symlink) == os.path.basename(reconstituted_file)
+
 def test_main_no_args(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(sys, "argv", ["run_pipeline.py"])
