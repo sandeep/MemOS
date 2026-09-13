@@ -5,16 +5,11 @@
 **Goal:** Introduce Pydantic models to strictly normalize and validate all Knowledge Graph LLM outputs (both V1 and V2), and ensure the extractor correctly catches agent outputs that miss the file system.
 
 **Architecture:** 
-- Define Pydantic models for both the V1 (Legacy) and V2 (Propositional) schemas in a new `src/models.py`.
-- Update `src/validator.py` to parse the raw text through Pydantic, instantly coercing casing issues and stripping out CoT (Chain of Thought) text, then saving the normalized JSON back to disk.
+- Define Pydantic models for both the V1 (Legacy) and V2 (Propositional) schemas in `src/models.py`.
+- Update `src/validator.py` to parse the raw text through Pydantic, instantly coercing casing issues and stripping out CoT text, then saving the normalized JSON back to disk.
 - Update `src/extractor_rlms.py` to capture the raw RLM agent output and feed it to the validator if the file wasn't natively created.
-- Add `pydantic` to the `Containerfile`.
 
 **Tech Stack:** Python, Pydantic, Podman
-
-## Global Constraints
-- `pydantic` must be added to `Containerfile`.
-- Normalized JSON must be dumped back to disk so `src/evaluator.py` can read it cleanly.
 
 ---
 
@@ -22,37 +17,92 @@
 
 **Files:**
 - Modify: `Containerfile`
+- Modify: `tests/test_imports.py` (New)
 
-- [ ] **Step 1: Add Pydantic to Containerfile**
+- [ ] **Step 1: Write the failing test**
 
-Modify `Containerfile` to include `pydantic` in the pip install command:
+```python
+# tests/test_imports.py
+def test_pydantic_installed():
+    try:
+        import pydantic
+        assert True
+    except ImportError:
+        assert False, "Pydantic is not installed"
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_imports.py -v`
+Expected: FAIL with "ImportError" or similar
+
+- [ ] **Step 3: Write minimal implementation**
+
+Modify `Containerfile`:
 ```dockerfile
 RUN pip install --no-cache-dir requests presidio-analyzer presidio-anonymizer rlms openai pydantic
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `podman build -t braindrain . && podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_imports.py -v`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add Containerfile
-git commit -m "build: add pydantic dependency"
+git add Containerfile tests/test_imports.py
+git commit -m "build: add pydantic dependency to containerfile"
 ```
 
 ### Task 2: Define Data Models
 
 **Files:**
 - Create: `src/models.py`
+- Create: `tests/test_models.py`
 
-**Interfaces:**
-- Produces: `CognitiveGraphV2`, `CognitiveGraphV1`
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 1: Write implementation**
-
-Create `src/models.py`:
 ```python
-from pydantic import BaseModel, Field, AliasChoices
-from typing import List, Dict, Any, Optional
+# tests/test_models.py
+from src.models import CognitiveGraphV2, CognitiveGraphV1
+import json
 
-# --- V2 (Propositional) Models ---
+def test_v2_alias_coercion():
+    # Test that lowercase keys from LLM are coerced to the correct Pydantic fields
+    raw = {
+        "semantic": [{"subject": "A", "relation": "B", "object": "C"}],
+        "episodic": [{"step": 1, "subject": "A", "relation": "B", "object": "C"}],
+        "procedural": [],
+        "active": []
+    }
+    model = CognitiveGraphV2.model_validate(raw)
+    assert len(model.semantic) == 1
+    assert model.episodic[0].step == 1
+
+def test_v1_legacy_parsing():
+    raw = {
+        "semantic_memory": {"nodes": [{"id": "1"}], "edges": []},
+        "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []},
+        "procedural_memory": {"instructions": []},
+        "active_state": {"current_goal": "test", "blockers": [], "next_action": ""}
+    }
+    model = CognitiveGraphV1.model_validate(raw)
+    assert len(model.semantic_memory.nodes) == 1
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_models.py -v`
+Expected: FAIL with "ModuleNotFoundError: No module named 'src.models'"
+
+- [ ] **Step 3: Write minimal implementation**
+
+```python
+# src/models.py
+from pydantic import BaseModel, Field, AliasChoices
+from typing import List, Dict, Any
+
 class Triple(BaseModel):
     subject: str
     relation: str
@@ -62,13 +112,11 @@ class EpisodicTriple(Triple):
     step: int
 
 class CognitiveGraphV2(BaseModel):
-    # AliasChoices allows matching either TitleCase or lowercase keys from the LLM
     semantic: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Semantic', 'semantic'))
     episodic: List[EpisodicTriple] = Field(default_factory=list, validation_alias=AliasChoices('Episodic', 'episodic'))
     procedural: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Procedural', 'procedural'))
     active: List[Triple] = Field(default_factory=list, validation_alias=AliasChoices('Active', 'active'))
 
-# --- V1 (Legacy/Naive) Models ---
 class SemanticMemoryV1(BaseModel):
     nodes: List[Dict[str, Any]] = Field(default_factory=list)
     edges: List[Dict[str, Any]] = Field(default_factory=list)
@@ -93,10 +141,15 @@ class CognitiveGraphV1(BaseModel):
     active_state: ActiveStateV1 = Field(default_factory=ActiveStateV1)
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_models.py -v`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/models.py
+git add src/models.py tests/test_models.py
 git commit -m "feat: introduce pydantic schemas for v1 and v2 knowledge graphs"
 ```
 
@@ -104,22 +157,47 @@ git commit -m "feat: introduce pydantic schemas for v1 and v2 knowledge graphs"
 
 **Files:**
 - Modify: `src/validator.py`
+- Modify: `tests/test_validator.py`
 
-**Interfaces:**
-- Consumes: `CognitiveGraphV1`, `CognitiveGraphV2`
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 1: Write implementation**
+Modify `tests/test_validator.py` to assert that the file is overwritten with normalized JSON:
+```python
+# tests/test_validator.py
+import json
+from src.validator import validate_schema
 
-Rewrite `src/validator.py` to use Pydantic. If validation passes, dump the normalized model back to the file so it has perfectly clean casing/structure.
+def test_validate_schema_normalizes_casing(tmp_path):
+    kg_file = tmp_path / "valid.json"
+    # Provide lowercase keys which are technically invalid under the old schema but coercible by Pydantic
+    kg_file.write_text(json.dumps({
+        "semantic": [{"subject": "A", "relation": "B", "object": "C"}],
+        "episodic": [{"step": 1, "subject": "A", "relation": "B", "object": "C"}],
+        "procedural": [],
+        "active": []
+    }))
+    assert validate_schema(str(kg_file), "propositional_v2") is True
+    
+    # Assert it was overwritten with Pydantic's dumped fields (which are lowercase anyway, but normalized)
+    normalized = json.loads(kg_file.read_text())
+    assert "semantic" in normalized
+    assert isinstance(normalized["semantic"], list)
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_validator.py -v`
+Expected: FAIL (because old validator expects exact `Semantic` root keys)
+
+- [ ] **Step 3: Write minimal implementation**
 
 ```python
-import json
+# src/validator.py
 import re
 from pydantic import ValidationError
 from src.models import CognitiveGraphV1, CognitiveGraphV2
 
 def extract_json_block(text: str) -> str:
-    # Attempt to extract JSON from markdown or raw text
     match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
     if match: return match.group(1).strip()
     match = re.search(r'\{.*\}', text, re.DOTALL)
@@ -127,16 +205,12 @@ def extract_json_block(text: str) -> str:
     return text
 
 def validate_and_normalize(raw_text: str, expected_schema: str) -> str:
-    """Validates raw text against schema and returns normalized JSON string. Raises ValueError if invalid."""
     clean_json = extract_json_block(raw_text)
-    
     try:
         if expected_schema == "propositional_v2":
             model = CognitiveGraphV2.model_validate_json(clean_json)
         else:
             model = CognitiveGraphV1.model_validate_json(clean_json)
-            
-        # Return perfectly normalized JSON (keys will match the Pydantic field names, e.g., 'semantic' instead of 'Semantic')
         return model.model_dump_json(indent=2)
     except ValidationError as e:
         raise ValueError(f"Pydantic Validation Error: {e}")
@@ -148,7 +222,6 @@ def validate_schema(kg_path: str, expected_schema: str) -> bool:
             
         normalized_json = validate_and_normalize(raw_text, expected_schema)
         
-        # Overwrite the file with the pristine, normalized JSON
         with open(kg_path, 'w') as f:
             f.write(normalized_json)
             
@@ -158,40 +231,74 @@ def validate_schema(kg_path: str, expected_schema: str) -> bool:
         return False
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_validator.py -v`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/validator.py
+git add src/validator.py tests/test_validator.py
 git commit -m "feat: use pydantic for robust validation and normalization"
 ```
 
 ### Task 4: Catch Missing Files in Orchestrator
 
 **Files:**
-- Modify: `run_pipeline.py`
 - Modify: `src/extractor_rlms.py`
 
-**Interfaces:**
-- Modifies orchestrator to handle agents returning JSON in stdout rather than writing to file.
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 1: Write implementation for `extractor_rlms.py`**
+```python
+# tests/test_extractor_rlms.py
+import os
+from unittest.mock import patch
+from src.extractor_rlms import extract
 
-Modify `src/extractor_rlms.py` to return the response text from `rlm.completion()`.
-Change:
+@patch('src.extractor_rlms.RLM')
+def test_extract_saves_stdout_fallback(mock_rlm_class, tmp_path):
+    mock_rlm_instance = mock_rlm_class.return_value
+    mock_rlm_instance.completion.return_value = '{"fallback": "json"}'
+    
+    transcript_file = tmp_path / "transcript.json"
+    transcript_file.write_text('{}')
+    output_file = tmp_path / "out.json"
+    
+    # Run extract, which should see output_file doesn't exist and save the response
+    extract(str(transcript_file), None, str(output_file))
+    
+    assert output_file.exists()
+    assert output_file.read_text() == '{"fallback": "json"}'
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_extractor_rlms.py -v`
+Expected: FAIL 
+
+- [ ] **Step 3: Write minimal implementation**
+
+Modify `src/extractor_rlms.py` around line 43:
 ```python
     print("Running RLM completion...")
     response = rlm.completion(prompt)
     print("RLM Execution complete.")
     
-    # NEW: Write the raw response to the file if it doesn't exist so the validator can pick it up
     if not os.path.exists(output_file) and response:
+        print(f"Agent did not create {output_file}. Saving raw stdout fallback...")
         with open(output_file, 'w') as f:
             f.write(response)
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `podman run --rm -v $(pwd):/app braindrain python -m pytest tests/test_extractor_rlms.py -v`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/extractor_rlms.py
+git add src/extractor_rlms.py tests/test_extractor_rlms.py
 git commit -m "fix: ensure rlm agent output is saved to disk if agent skips file writing"
 ```
