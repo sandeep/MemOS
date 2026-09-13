@@ -52,17 +52,19 @@ def test_reconstitute_copies_and_symlinks(tmp_path):
     assert os.path.islink(str(latest_symlink))
     assert os.readlink(str(latest_symlink)) == "kg_propositional_2026-09-13_gemma4_31b_reconstituted.json"
 
-def test_reconstitute_handles_missing_source(tmp_path):
+def test_reconstitute_raises_if_source_missing(tmp_path):
     missing_source = tmp_path / "nonexistent.json"
     target_kg = tmp_path / "secure" / "reconstituted" / "sample" / "kg_propositional_2026-09-13_gemma4_31b_reconstituted.json"
     
-    result = reconstitute(str(missing_source), str(target_kg))
-    
-    assert result == str(target_kg)
-    assert os.path.exists(target_kg)
-    with open(target_kg, "r") as f:
-        assert json.load(f) == {}
-        
-    latest_symlink = tmp_path / "secure" / "reconstituted" / "sample" / "latest.json"
-    assert os.path.islink(str(latest_symlink))
-    assert os.readlink(str(latest_symlink)) == "kg_propositional_2026-09-13_gemma4_31b_reconstituted.json"
+    with pytest.raises(FileNotFoundError):
+        reconstitute(str(missing_source), str(target_kg))
+
+def test_reconstitute_bare_filename(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "source.json"
+    source.write_text('{"test": 1}')
+    result = reconstitute("source.json", "target.json")
+    assert result == "target.json"
+    assert os.path.exists("target.json")
+    assert os.path.islink("latest.json")
+    assert os.readlink("latest.json") == "target.json"

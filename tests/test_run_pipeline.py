@@ -5,11 +5,25 @@ from unittest.mock import patch, MagicMock
 import pytest
 from run_pipeline import copy_to_scrubbed, process_file, main
 
+def _mock_extract(conversation_file, prompt_file=None, output_file="output_rlms.json"):
+    out_dir = os.path.dirname(output_file)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(output_file, "w") as f:
+        f.write('{"mock": true}')
+
+def _mock_extract_rlm(conversation_file, output_file="output.json"):
+    out_dir = os.path.dirname(output_file)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(output_file, "w") as f:
+        f.write('{"mock": true}')
+
 @pytest.fixture(autouse=True)
 def mock_pipeline_components(monkeypatch):
     """Mock extractor and evaluator calls by default in run_pipeline tests."""
-    monkeypatch.setattr("run_pipeline.extract_rlm", lambda *a, **kw: None)
-    monkeypatch.setattr("run_pipeline.extract", lambda *a, **kw: None)
+    monkeypatch.setattr("run_pipeline.extract_rlm", _mock_extract_rlm)
+    monkeypatch.setattr("run_pipeline.extract", _mock_extract)
     monkeypatch.setattr("run_pipeline.evaluate_pipeline", lambda *a, **kw: {"test.json": 100.0})
 
 def test_copy_to_scrubbed(tmp_path, monkeypatch):
@@ -51,8 +65,8 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
     with open(mock_file, "w") as f:
         f.write('{"data": "val"}')
         
-    with patch("run_pipeline.extract_rlm") as mock_extract_rlm, \
-         patch("run_pipeline.extract") as mock_extract, \
+    with patch("run_pipeline.extract_rlm", side_effect=_mock_extract_rlm) as mock_extract_rlm, \
+         patch("run_pipeline.extract", side_effect=_mock_extract) as mock_extract, \
          patch("run_pipeline.evaluate_pipeline") as mock_evaluate:
          
         mock_evaluate.return_value = {
