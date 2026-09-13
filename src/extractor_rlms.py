@@ -1,3 +1,7 @@
+"""
+extractor_rlms.py
+Dynamic Recursive Language Model (RLM) pipeline that writes and executes its own parsing code.
+"""
 import os
 import sys
 import json
@@ -5,9 +9,9 @@ from rlm import RLM
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 
-# Set up Ollama's OpenAI-compatible endpoint
-os.environ["OPENAI_API_KEY"] = "ollama"
-os.environ["OPENAI_BASE_URL"] = "http://host.docker.internal:11434/v1"
+# Set up NVIDIA's OpenAI-compatible endpoint
+os.environ["OPENAI_API_KEY"] = os.environ.get("NVIDIA_API_KEY", "")
+os.environ["OPENAI_BASE_URL"] = "https://integrate.api.nvidia.com/v1"
 
 analyzer = AnalyzerEngine()
 anonymizer = AnonymizerEngine()
@@ -16,7 +20,7 @@ def scrub_pii(text: str) -> str:
     results = analyzer.analyze(text=text, language='en')
     return anonymizer.anonymize(text=text, analyzer_results=results).text
 
-def extract(conversation_file: str):
+def extract(conversation_file: str, prompt_file: str = None):
     with open(conversation_file, 'r') as f:
         data = json.load(f)
     
@@ -27,23 +31,32 @@ def extract(conversation_file: str):
     # The RLM will execute its own Python REPL under the hood
     rlm = RLM(
         backend="openai",
-        backend_kwargs={"model_name": "gemma4", "sampling_args": {"temperature": 0.0}},
+        backend_kwargs={"model_name": "google/gemma-4-31b-it", "sampling_args": {"temperature": 0.0}},
         verbose=True
     )
     
-    prompt = f"""You are a Knowledge Graph extraction system.
-    I have provided the raw conversation transcript below.
-    Your task is to write a python program to loop through this transcript and extract it into a 4-part JSON Knowledge Graph (Semantic, Episodic, Procedural, Active).
-    
-    Save the final output JSON to 'output_rlms.json'.
-    Make sure your python code executes quickly (under 30 seconds).
-    
-    Transcript: {safe_transcript[:5000]}
-    """
+    if prompt_file and os.path.exists(prompt_file):
+        with open(prompt_file, 'r') as f:
+            base_prompt = f.read()
+    else:
+        # Fallback to the default 4-part KG prompt
+        base_prompt = f"""You are a Knowledge Graph extraction system.
+        I have provided the raw conversation transcript below.
+        Your task is to write a python program to loop through this transcript and extract it into a 4-part JSON Knowledge Graph (Semantic, Episodic, Procedural, Active).
+        
+        Save the final output JSON to 'output_rlms.json'.
+        Make sure your python code executes quickly (under 30 seconds)."""
+        
+    prompt = f"{base_prompt}\n\nTranscript:\n{safe_transcript[:5000]}"
     
     print("Running RLM completion...")
     response = rlm.completion(prompt)
     print("RLM Execution complete.")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1: extract(sys.argv[1])
+    if len(sys.argv) > 2:
+        extract(sys.argv[1], sys.argv[2])
+    elif len(sys.argv) > 1:
+        extract(sys.argv[1])
+    else:
+        print("Usage: python src/extractor_rlms.py <transcript.json> [prompt.txt]")
