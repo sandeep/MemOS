@@ -5,7 +5,7 @@ from src.models import CognitiveGraphV1, CognitiveGraphV2
 def extract_json_block(text: str) -> str:
     match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
     if match: return match.group(1).strip()
-    match = re.search(r'\{.*?\}', text, re.DOTALL)
+    match = re.search(r'\{.*\}', text, re.DOTALL)
     if match: return match.group(0).strip()
     return text
 
