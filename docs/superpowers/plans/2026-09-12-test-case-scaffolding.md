@@ -210,7 +210,7 @@ def process_file(input_path: str):
     extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)
     
     # 2. Evaluate
-    # Temporarily cd into eval_dir so answer_key.json gets saved correctly
+    # Temporarily cd into eval_dir so answer_key gets saved with the date and model tag
     original_cwd = os.getcwd()
     os.chdir(eval_dir)
     results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), 
@@ -232,3 +232,8 @@ def process_file(input_path: str):
 git add run_pipeline.py
 git commit -m "feat: hook extraction and evaluation into orchestrator"
 ```
+
+### Task 5: Reconstitution Symlinks (Architecture Setup)
+
+- [ ] **Step 1: Define symlink behavior for Reconstituted KGs**
+We will ensure that when the Reconstitutor generates `kg_propositional_DATE_MODEL_reconstituted.json`, it also creates/updates a `latest.json` symlink pointing to it, so downstream systems always know where to look.
