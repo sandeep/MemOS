@@ -3,7 +3,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install dependencies
-RUN pip install --no-cache-dir requests presidio-analyzer presidio-anonymizer rlms openai
+RUN pip install --no-cache-dir requests presidio-analyzer presidio-anonymizer rlms openai pydantic
 RUN python -m spacy download en_core_web_lg
 
 # Copy pipeline files
