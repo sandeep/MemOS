@@ -57,6 +57,11 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
     response = rlm.completion(prompt)
     print("RLM Execution complete.")
 
+    if not os.path.exists(output_file) and response:
+        print(f"Agent did not create {output_file}. Saving raw stdout fallback...")
+        with open(output_file, 'w') as f:
+            f.write(response)
+
 if __name__ == "__main__":
     if len(sys.argv) > 3:
         extract(sys.argv[1], sys.argv[2], sys.argv[3])
