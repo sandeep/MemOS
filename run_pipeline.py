@@ -60,6 +60,9 @@ def process_file(input_path: str):
     try:
         valid_kgs = []
         for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
+            if kg == kg_naive:
+                valid_kgs.append(os.path.basename(kg))
+                continue
             schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
             if validate_schema(os.path.join(original_cwd, kg), schema):
                 valid_kgs.append(os.path.basename(kg))

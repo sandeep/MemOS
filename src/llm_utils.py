@@ -67,9 +67,9 @@ def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", 
                 time.sleep(5 * (attempt + 1))
             else:
                 print(f"HTTP Error: {e}")
-                return ""
+                raise RuntimeError(f"LLM API HTTP Error: {e}")
         except Exception as e:
             print(f"LLM Connection Error: {e}")
             time.sleep(2)
             
-    return ""
+    raise RuntimeError("LLM Connection failed after 5 retries.")

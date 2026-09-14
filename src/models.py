@@ -16,16 +16,16 @@ class CognitiveGraphV2(BaseModel):
     active: List[Triple] = Field(validation_alias=AliasChoices('Active', 'active'))
 
 class SemanticMemoryV1(BaseModel):
-    nodes: List[Any] = Field(default_factory=list)
-    edges: List[Any] = Field(default_factory=list)
+    nodes: List[Dict[str, Any]] = Field(default_factory=list)
+    edges: List[Dict[str, Any]] = Field(default_factory=list)
 
 class EpisodicLedgerV1(BaseModel):
-    events: List[Any] = Field(default_factory=list)
-    decisions: List[Any] = Field(default_factory=list)
-    rejected_branches: List[Any] = Field(default_factory=list)
+    events: List[Dict[str, Any]] = Field(default_factory=list)
+    decisions: List[Dict[str, Any]] = Field(default_factory=list)
+    rejected_branches: List[Dict[str, Any]] = Field(default_factory=list)
 
 class ProceduralMemoryV1(BaseModel):
-    instructions: List[Any] = Field(default_factory=list)
+    instructions: List[Dict[str, Any]] = Field(default_factory=list)
 
 class ActiveStateV1(BaseModel):
     current_goal: str = ""
