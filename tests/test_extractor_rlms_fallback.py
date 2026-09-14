@@ -40,3 +40,16 @@ def test_fallback_handles_string_cast_fallback(mock_rlm_class, tmp_path):
     
     assert output_file.exists()
     assert output_file.read_text() == '{"fallback": "string_cast"}'
+
+@patch('src.extractor_rlms.RLM')
+def test_extract_raises_on_rlm_crash(mock_rlm_class, tmp_path):
+    mock_rlm_instance = mock_rlm_class.return_value
+    mock_rlm_instance.completion.side_effect = Exception("RLM Internal Crash")
+    
+    transcript_file = tmp_path / "transcript.json"
+    transcript_file.write_text('{"text": "test"}')
+    
+    from src.extractor_rlms import extract
+    import pytest
+    with pytest.raises(RuntimeError, match="RLM Execution Failed: RLM Internal Crash"):
+        extract(str(transcript_file), None, str(tmp_path / "out.json"))
