@@ -54,7 +54,10 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
     prompt = f"{base_prompt}\n\nTranscript:\n{safe_transcript[:5000]}"
     
     print("Running RLM completion...")
-    response = rlm.completion(prompt)
+    try:
+        response = rlm.completion(prompt)
+    except Exception as e:
+        raise RuntimeError(f"RLM Execution Failed: {e}") from e
     print("RLM Execution complete.")
 
     if (not os.path.exists(output_file) or os.path.getsize(output_file) == 0) and response:
