@@ -48,6 +48,10 @@ def process_file(input_path: str):
     kg_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
     leaderboard = os.path.join(eval_dir, f"leaderboard_{tag}.md")
     
+    if os.path.exists(leaderboard):
+        print(f"Skipping {input_path}, already fully processed today (found {os.path.basename(leaderboard)})")
+        return
+        
     logger = PipelineLogger(input_path, model_str)
     log_file = os.path.join("data", "working", "pipeline_runs.jsonl")
     
