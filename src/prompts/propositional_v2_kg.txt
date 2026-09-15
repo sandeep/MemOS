@@ -41,5 +41,6 @@ CRITICAL RULES:
 Do not explain. Just output the python code.
 
 CRITICAL REQUIREMENT:
-You must write your script to aggressively save the in-progress JSON state to 'output.json' after EVERY SINGLE CHUNK you process. Do NOT hold the entire state in memory and wait until the end. This provides interim updates and prevents data loss if the API times out mid-extraction.
+You must write your script to aggressively save the in-progress JSON state to 'output.tmp.json' after EVERY SINGLE CHUNK you process to prevent data loss. 
+Once ALL chunks are successfully processed, you must save the final complete JSON to 'output.json'. Do NOT write to 'output.json' until the loop is 100% finished.
 
