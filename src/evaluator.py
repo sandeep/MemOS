@@ -6,6 +6,7 @@ Scores multiple KG files against a raw transcript.
 import json
 import sys
 import re
+import os
 from llm_utils import call_llm
 
 QUESTIONS = [
@@ -72,7 +73,8 @@ def run_pipeline(transcript_file: str, kg_files: list):
     answer_key = generate_answer_key(transcript_str)
     
     # Save the answer key to disk for visibility
-    with open("answer_key.json", "w") as f:
+    base_transcript = os.path.basename(transcript_file).replace(".json", "")
+    with open(f"{base_transcript}_answer_key.json", "w") as f:
         json.dump(answer_key, f, indent=2)
     
     results = {}
