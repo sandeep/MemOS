@@ -87,3 +87,34 @@ def test_evaluator_saves_data_to_disk(mock_call_llm, tmp_path):
     assert (tmp_path / "transcript_answer_key.json").exists()
     assert (tmp_path / "mock_kg_retrieved.json").exists()
     assert (tmp_path / "mock_kg_scores.json").exists()
+
+def test_evaluator_ignores_0_byte_corrupted_files(tmp_path):
+    from src.evaluator import run_pipeline
+    import os
+    import json
+    
+    transcript = tmp_path / "transcript.json"
+    transcript.write_text('{"text": "hello"}')
+    
+    kg = tmp_path / "kg.json"
+    kg.write_text('{"nodes": []}')
+    
+    # Create 0-byte corrupt files
+    (tmp_path / "transcript_answer_key.json").touch()
+    (tmp_path / "kg_retrieved.json").touch()
+    (tmp_path / "kg_scores.json").touch()
+    
+    assert os.path.getsize(tmp_path / "transcript_answer_key.json") == 0
+    
+    with patch('src.evaluator.call_llm') as mock_llm:
+        mock_llm.return_value = "100\nMock."
+        original_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            run_pipeline(str(transcript), [str(kg)])
+        finally:
+            os.chdir(original_cwd)
+            
+        # If it successfully ignored the 0-byte files, it will have called the LLM and overwritten them
+        assert os.path.getsize(tmp_path / "transcript_answer_key.json") > 0
+        assert mock_llm.called
