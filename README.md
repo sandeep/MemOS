@@ -19,14 +19,14 @@ Instead of statically parsing JSON with fixed python scripts, this project uses 
    ```
 
 2. **Start the Pipeline**:
-   You must run the orchestrator inside Podman to ensure the dynamically generated Python code is securely sandboxed. The automated pipeline (`run_pipeline.py`) manages extraction across multiple methods (Naive, RLM, Propositional) and automatically runs the LLM Evaluator on all of them.
+   You must run the orchestrator inside Podman to ensure the dynamically generated Python code is securely sandboxed. The automated pipeline (`run_pipeline.py`) manages extraction across multiple methods (Naive, RLM, Propositional) and automatically runs the LLM Evaluator on all of them. The script will automatically load your `.env` file.
    
    ```bash
    # Run the pipeline on a single file:
-   podman run --rm -v $(pwd):/app -e NVIDIA_API_KEY=$NVIDIA_API_KEY braindrain python run_pipeline.py data/secure/inputs/test-case-conversation.json
+   podman run --rm -v $(pwd):/app braindrain python run_pipeline.py data/secure/inputs/test-case-conversation.json
    
    # Or run batch processing (resumable):
-   podman run --rm -v $(pwd):/app -e NVIDIA_API_KEY=$NVIDIA_API_KEY braindrain python run_pipeline.py --all
+   podman run --rm -v $(pwd):/app braindrain python run_pipeline.py --all
    ```
 
 ## Directory Structure and JSON Artifacts
