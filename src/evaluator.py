@@ -6,6 +6,7 @@ Scores multiple KG files against a raw transcript.
 import json
 import sys
 import re
+import os
 from llm_utils import call_llm
 
 QUESTIONS = [
@@ -69,7 +70,19 @@ def run_pipeline(transcript_file: str, kg_files: list):
     with open(transcript_file, 'r') as f:
         transcript_str = json.dumps(json.load(f))[:8000]
         
-    answer_key = generate_answer_key(transcript_str)
+    base_transcript = os.path.basename(transcript_file).replace(".json", "")
+    answer_key_file = f"{base_transcript}_answer_key.json"
+    
+    if os.path.exists(answer_key_file) and os.path.getsize(answer_key_file) > 0:
+        print(f"\n--- PHASE 1: LOADING ANSWER KEY (found {answer_key_file}) ---")
+        with open(answer_key_file, "r") as f:
+            answer_key = json.load(f)
+    else:
+        answer_key = generate_answer_key(transcript_str)
+        # Save the answer key to disk for visibility
+        with open(answer_key_file + ".tmp", "w") as f:
+            json.dump(answer_key, f, indent=2)
+        os.rename(answer_key_file + ".tmp", answer_key_file)
     
     results = {}
     for kg_file in kg_files:
@@ -81,8 +94,31 @@ def run_pipeline(transcript_file: str, kg_files: list):
             print(f"Error loading {kg_file}: {e}. Skipping.")
             continue
             
-        retrieved = retrieve_answers(kg_str)
-        scores = judge_answers(answer_key, retrieved)
+        base_name = os.path.basename(kg_file).replace(".json", "")
+        retrieved_file = f"{base_name}_retrieved.json"
+        
+        if os.path.exists(retrieved_file) and os.path.getsize(retrieved_file) > 0:
+            print(f"Loading retrieved answers from {retrieved_file}")
+            with open(retrieved_file, "r") as f:
+                retrieved = json.load(f)
+        else:
+            retrieved = retrieve_answers(kg_str)
+            # Save retrieved answers to disk for visibility
+            with open(retrieved_file + ".tmp", "w") as f:
+                json.dump(retrieved, f, indent=2)
+            os.rename(retrieved_file + ".tmp", retrieved_file)
+            
+        scores_file = f"{base_name}_scores.json"
+        if os.path.exists(scores_file) and os.path.getsize(scores_file) > 0:
+            print(f"Loading scores from {scores_file}")
+            with open(scores_file, "r") as f:
+                scores = json.load(f)
+        else:
+            scores = judge_answers(answer_key, retrieved)
+            # Save scores to disk for visibility
+            with open(scores_file + ".tmp", "w") as f:
+                json.dump(scores, f, indent=2)
+            os.rename(scores_file + ".tmp", scores_file)
         
         avg_score = sum(scores) / len(scores) if scores else 0
         results[kg_file] = avg_score

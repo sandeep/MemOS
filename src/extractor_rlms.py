@@ -44,7 +44,9 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
         I have provided the raw conversation transcript below.
         Your task is to write a python program to loop through this transcript and extract it into a 4-part JSON Knowledge Graph (Semantic, Episodic, Procedural, Active).
         
-        Save the final output JSON to 'output_rlms.json'.
+        CRITICAL REQUIREMENT:
+        You must write your script to aggressively save the in-progress JSON state to 'output_rlms.json' after EVERY SINGLE CHUNK you process. Do NOT hold the entire state in memory and wait until the end. This provides interim updates and prevents data loss if the API times out mid-extraction.
+        
         Make sure your python code executes quickly (under 30 seconds)."""
         
     import re
@@ -54,8 +56,21 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
     prompt = f"{base_prompt}\n\nTranscript:\n{safe_transcript[:5000]}"
     
     print("Running RLM completion...")
-    response = rlm.completion(prompt)
+    try:
+        response = rlm.completion(prompt)
+    except Exception as e:
+        raise RuntimeError(f"RLM Execution Failed: {e}") from e
     print("RLM Execution complete.")
+
+    if (not os.path.exists(output_file) or os.path.getsize(output_file) == 0) and response:
+        print(f"Agent did not create {output_file} (or it was empty). Saving raw stdout fallback...")
+        if os.path.dirname(output_file):
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            try:
+                f.write(response.response)
+            except Exception:
+                f.write(str(response))
 
 if __name__ == "__main__":
     if len(sys.argv) > 3:

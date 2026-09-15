@@ -4,6 +4,14 @@ import shutil
 import glob
 import datetime
 
+env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(env_file):
+    with open(env_file) as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, val = line.strip().split('=', 1)
+                os.environ[key.strip()] = val.strip().strip("'\"")
+
 # Ensure src is in sys.path for internal module imports (e.g. llm_utils)
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "src"))
 if src_dir not in sys.path:
@@ -11,6 +19,8 @@ if src_dir not in sys.path:
 
 from src.scaffold import init_directories
 from src.extractor import extract_rlm
+from src.logger import PipelineLogger
+import traceback
 try:
     from src.extractor_rlms import extract
 except ImportError:
@@ -43,41 +53,98 @@ def process_file(input_path: str):
     kg_naive = os.path.join(eval_dir, f"kg_naive_{tag}.json")
     kg_rlms = os.path.join(eval_dir, f"kg_rlms_{tag}.json")
     kg_prop = os.path.join(eval_dir, f"kg_propositional_{tag}.json")
+    kg_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
     leaderboard = os.path.join(eval_dir, f"leaderboard_{tag}.md")
     
-    # 1. Extract
-    extract_rlm(scrubbed, kg_naive)
-    extract(scrubbed, None, kg_rlms)
-    extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)
+    if os.path.exists(leaderboard):
+        print(f"Skipping {input_path}, already fully processed today (found {os.path.basename(leaderboard)})")
+        return
+        
+    logger = PipelineLogger(input_path, model_str)
+    log_file = os.path.join("data", "working", "pipeline_runs.jsonl")
     
-    # 2. Evaluate
-    # Temporarily cd into eval_dir so answer_key gets saved with the date and model tag
-    original_cwd = os.getcwd()
-    os.chdir(eval_dir)
+    from src.validator import validate_schema
     try:
-        results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), 
-                                    [os.path.basename(kg_naive), os.path.basename(kg_rlms), os.path.basename(kg_prop)])
+        # 1. Extract
+        extractions = [
+            ("kg_naive", kg_naive, lambda: extract_rlm(scrubbed, kg_naive)),
+            ("kg_rlms", kg_rlms, lambda: extract(scrubbed, None, kg_rlms)),
+            ("kg_prop", kg_prop, lambda: extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)),
+            ("kg_prop_v2", kg_prop_v2, lambda: extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2))
+        ]
         
-        # 3. Write leaderboard
-        with open(os.path.basename(leaderboard), "w") as f:
-            f.write(f"# Leaderboard for {base_name} ({tag})\n\n")
-            for k, v in results.items():
-                f.write(f"- {k}: {v}%\n")
+        for name, path, func in extractions:
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                print(f"Skipping extraction for {name}, file {os.path.basename(path)} already exists.")
+                logger.record_extraction(name, True)
+                continue
+                
+            try:
+                func()
+                logger.record_extraction(name, True)
+            except Exception as e:
+                logger.record_extraction(name, False, str(e))
+                print(f"Extraction failed for {name}: {e}")
+        
+        # 2. Evaluate
+        original_cwd = os.getcwd()
+        os.chdir(eval_dir)
+        try:
+            valid_kgs = []
+            for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
+                kg_base = os.path.basename(kg)
+                if kg == kg_naive:
+                    valid_kgs.append(kg_base)
+                    logger.record_validation("kg_naive", True)
+                    continue
+                    
+                schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
+                try:
+                    is_valid = validate_schema(os.path.join(original_cwd, kg), schema)
+                    if is_valid:
+                        valid_kgs.append(kg_base)
+                    logger.record_validation(kg_base, is_valid)
+                except Exception as e:
+                    logger.record_validation(kg_base, False)
+                    print(f"Validation crashed for {kg_base}: {e}")
+                    
+            try:
+                results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), valid_kgs)
+                logger.record_scores(results)
+                
+                # 3. Write leaderboard
+                with open(os.path.basename(leaderboard), "w") as f:
+                    f.write(f"# Leaderboard for {base_name} ({tag})\n\n")
+                    for k, v in results.items():
+                        f.write(f"- {k}: {v}%\n")
+            except Exception as e:
+                logger.record_eval_error(str(e))
+                print(f"Evaluation crashed: {e}")
+        finally:
+            os.chdir(original_cwd)
+            
+        print(f"Finished {base_name}. Leaderboard at {leaderboard}")
+            
+        # 4. Reconstitute
+        reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
+        reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
+        try:
+            reconstitute(kg_prop, reconstituted_file)
+            logger.record_reconstitution(True)
+            print(f"Reconstituted KG to {reconstituted_file}")
+        except Exception as e:
+            logger.record_reconstitution(False, str(e))
+            print(f"Skipping reconstitution for {base_name}: {e}")
+            
     finally:
-        os.chdir(original_cwd)
-        
-    print(f"Finished {base_name}. Leaderboard at {leaderboard}")
-        
-    # 4. Reconstitute
-    reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
-    reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
-    try:
-        reconstitute(kg_prop, reconstituted_file)
-        print(f"Reconstituted KG to {reconstituted_file}")
-    except FileNotFoundError as e:
-        print(f"Skipping reconstitution for {base_name}: {e}")
+        logger.flush(log_file)
 
 def main():
+    if not os.environ.get("NVIDIA_API_KEY"):
+        print("FATAL ERROR: NVIDIA_API_KEY environment variable is not set.")
+        print("The pipeline requires LLM access and cannot run without it. Aborting.")
+        sys.exit(1)
+        
     init_directories()
     if len(sys.argv) < 2:
         print("Usage: python run_pipeline.py <file_path> or --all")

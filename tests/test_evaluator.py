@@ -51,3 +51,70 @@ def test_run_pipeline_error_handling():
             assert results[valid_kg] == 95.0
             assert invalid_json_kg not in results
             assert missing_kg not in results
+
+@patch('src.evaluator.call_llm')
+def test_evaluator_saves_data_to_disk(mock_call_llm, tmp_path):
+    import os
+    import json
+    from src.evaluator import run_pipeline
+    def mock_llm_response(prompt, *args, **kwargs):
+        if "generate" in prompt.lower() or "synthesize" in prompt.lower() or "attempt" in prompt.lower():
+            return "Mock Ground Truth Answer."
+        if "Knowledge Graph" in prompt:
+            return "Mock Retrieved Answer."
+        return "100\nMock Explanation."
+        
+    mock_call_llm.side_effect = mock_llm_response
+    
+    transcript_file = tmp_path / "transcript.json"
+    transcript_file.write_text('{"text": "mock transcript"}')
+    
+    kg_file = tmp_path / "mock_kg.json"
+    kg_file.write_text('{"nodes": [], "edges": []}')
+    
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        results = run_pipeline(str(transcript_file), [str(kg_file)])
+    finally:
+        os.chdir(original_cwd)
+        
+    assert str(kg_file) in results
+    assert results[str(kg_file)] == 100.0
+    
+    # We will test the dynamic answer key name later!
+    # For now, it will use base_name from the transcript file (if we implement it) or something else.
+    assert (tmp_path / "transcript_answer_key.json").exists()
+    assert (tmp_path / "mock_kg_retrieved.json").exists()
+    assert (tmp_path / "mock_kg_scores.json").exists()
+
+def test_evaluator_ignores_0_byte_corrupted_files(tmp_path):
+    from src.evaluator import run_pipeline
+    import os
+    import json
+    
+    transcript = tmp_path / "transcript.json"
+    transcript.write_text('{"text": "hello"}')
+    
+    kg = tmp_path / "kg.json"
+    kg.write_text('{"nodes": []}')
+    
+    # Create 0-byte corrupt files
+    (tmp_path / "transcript_answer_key.json").touch()
+    (tmp_path / "kg_retrieved.json").touch()
+    (tmp_path / "kg_scores.json").touch()
+    
+    assert os.path.getsize(tmp_path / "transcript_answer_key.json") == 0
+    
+    with patch('src.evaluator.call_llm') as mock_llm:
+        mock_llm.return_value = "100\nMock."
+        original_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            run_pipeline(str(transcript), [str(kg)])
+        finally:
+            os.chdir(original_cwd)
+            
+        # If it successfully ignored the 0-byte files, it will have called the LLM and overwritten them
+        assert os.path.getsize(tmp_path / "transcript_answer_key.json") > 0
+        assert mock_llm.called
