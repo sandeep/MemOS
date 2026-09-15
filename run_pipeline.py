@@ -4,6 +4,14 @@ import shutil
 import glob
 import datetime
 
+env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(env_file):
+    with open(env_file) as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, val = line.strip().split('=', 1)
+                os.environ[key.strip()] = val.strip().strip("'\"")
+
 # Ensure src is in sys.path for internal module imports (e.g. llm_utils)
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "src"))
 if src_dir not in sys.path:
