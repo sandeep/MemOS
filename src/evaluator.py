@@ -71,6 +71,10 @@ def run_pipeline(transcript_file: str, kg_files: list):
         
     answer_key = generate_answer_key(transcript_str)
     
+    # Save the answer key to disk for visibility
+    with open("answer_key.json", "w") as f:
+        json.dump(answer_key, f, indent=2)
+    
     results = {}
     for kg_file in kg_files:
         print(f"\n--- PHASE 2 & 3: EVALUATING {kg_file} ---")
@@ -82,7 +86,17 @@ def run_pipeline(transcript_file: str, kg_files: list):
             continue
             
         retrieved = retrieve_answers(kg_str)
+        
+        # Save retrieved answers to disk for visibility
+        base_name = os.path.basename(kg_file).replace(".json", "")
+        with open(f"{base_name}_retrieved.json", "w") as f:
+            json.dump(retrieved, f, indent=2)
+            
         scores = judge_answers(answer_key, retrieved)
+        
+        # Save scores to disk for visibility
+        with open(f"{base_name}_scores.json", "w") as f:
+            json.dump(scores, f, indent=2)
         
         avg_score = sum(scores) / len(scores) if scores else 0
         results[kg_file] = avg_score
