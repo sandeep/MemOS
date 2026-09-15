@@ -23,6 +23,9 @@ class PipelineLogger:
     def record_scores(self, scores: dict):
         self.state["scores"] = scores
 
+    def record_eval_error(self, error: str):
+        self.state["eval_error"] = error
+
     def record_reconstitution(self, status: bool, error: str = None):
         self.state["reconstitution"] = {"status": status, "error": error}
 

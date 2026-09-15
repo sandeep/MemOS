@@ -52,70 +52,75 @@ def process_file(input_path: str):
     log_file = os.path.join("data", "working", "pipeline_runs.jsonl")
     
     from src.validator import validate_schema
-    # 1. Extract
-    extractions = [
-        ("kg_naive", kg_naive, lambda: extract_rlm(scrubbed, kg_naive)),
-        ("kg_rlms", kg_rlms, lambda: extract(scrubbed, None, kg_rlms)),
-        ("kg_prop", kg_prop, lambda: extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)),
-        ("kg_prop_v2", kg_prop_v2, lambda: extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2))
-    ]
-    
-    for name, path, func in extractions:
-        try:
-            func()
-            logger.record_extraction(name, True)
-        except Exception as e:
-            logger.record_extraction(name, False, str(e))
-            print(f"Extraction failed for {name}: {e}")
-    
-    # 2. Evaluate
-    # Temporarily cd into eval_dir so answer_key gets saved with the date and model tag
-    original_cwd = os.getcwd()
-    os.chdir(eval_dir)
     try:
-        valid_kgs = []
-        for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
-            kg_base = os.path.basename(kg)
-            if kg == kg_naive:
-                valid_kgs.append(kg_base)
-                logger.record_validation("kg_naive", True)
-                continue
-                
-            schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
+        # 1. Extract
+        extractions = [
+            ("kg_naive", kg_naive, lambda: extract_rlm(scrubbed, kg_naive)),
+            ("kg_rlms", kg_rlms, lambda: extract(scrubbed, None, kg_rlms)),
+            ("kg_prop", kg_prop, lambda: extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)),
+            ("kg_prop_v2", kg_prop_v2, lambda: extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2))
+        ]
+        
+        for name, path, func in extractions:
             try:
-                is_valid = validate_schema(os.path.join(original_cwd, kg), schema)
-                if is_valid:
-                    valid_kgs.append(kg_base)
-                logger.record_validation(kg_base, is_valid)
+                func()
+                logger.record_extraction(name, True)
             except Exception as e:
-                logger.record_validation(kg_base, False)
-                print(f"Validation crashed for {kg_base}: {e}")
+                logger.record_extraction(name, False, str(e))
+                print(f"Extraction failed for {name}: {e}")
+        
+        # 2. Evaluate
+        original_cwd = os.getcwd()
+        os.chdir(eval_dir)
+        try:
+            valid_kgs = []
+            for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
+                kg_base = os.path.basename(kg)
+                if kg == kg_naive:
+                    valid_kgs.append(kg_base)
+                    logger.record_validation("kg_naive", True)
+                    continue
+                    
+                schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
+                try:
+                    is_valid = validate_schema(os.path.join(original_cwd, kg), schema)
+                    if is_valid:
+                        valid_kgs.append(kg_base)
+                    logger.record_validation(kg_base, is_valid)
+                except Exception as e:
+                    logger.record_validation(kg_base, False)
+                    print(f"Validation crashed for {kg_base}: {e}")
+                    
+            try:
+                results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), valid_kgs)
+                logger.record_scores(results)
                 
-        results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), valid_kgs)
-        logger.record_scores(results)
-        
-        # 3. Write leaderboard
-        with open(os.path.basename(leaderboard), "w") as f:
-            f.write(f"# Leaderboard for {base_name} ({tag})\n\n")
-            for k, v in results.items():
-                f.write(f"- {k}: {v}%\n")
+                # 3. Write leaderboard
+                with open(os.path.basename(leaderboard), "w") as f:
+                    f.write(f"# Leaderboard for {base_name} ({tag})\n\n")
+                    for k, v in results.items():
+                        f.write(f"- {k}: {v}%\n")
+            except Exception as e:
+                logger.record_eval_error(str(e))
+                print(f"Evaluation crashed: {e}")
+        finally:
+            os.chdir(original_cwd)
+            
+        print(f"Finished {base_name}. Leaderboard at {leaderboard}")
+            
+        # 4. Reconstitute
+        reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
+        reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
+        try:
+            reconstitute(kg_prop, reconstituted_file)
+            logger.record_reconstitution(True)
+            print(f"Reconstituted KG to {reconstituted_file}")
+        except Exception as e:
+            logger.record_reconstitution(False, str(e))
+            print(f"Skipping reconstitution for {base_name}: {e}")
+            
     finally:
-        os.chdir(original_cwd)
-        
-    print(f"Finished {base_name}. Leaderboard at {leaderboard}")
-        
-    # 4. Reconstitute
-    reconstituted_dir = os.path.join("data/secure/reconstituted", base_name)
-    reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
-    try:
-        reconstitute(kg_prop, reconstituted_file)
-        logger.record_reconstitution(True)
-        print(f"Reconstituted KG to {reconstituted_file}")
-    except Exception as e:
-        logger.record_reconstitution(False, str(e))
-        print(f"Skipping reconstitution for {base_name}: {e}")
-        
-    logger.flush(log_file)
+        logger.flush(log_file)
 
 def main():
     init_directories()
