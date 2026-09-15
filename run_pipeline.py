@@ -11,6 +11,8 @@ if src_dir not in sys.path:
 
 from src.scaffold import init_directories
 from src.extractor import extract_rlm
+from src.logger import PipelineLogger
+import traceback
 try:
     from src.extractor_rlms import extract
 except ImportError:
@@ -46,12 +48,25 @@ def process_file(input_path: str):
     kg_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
     leaderboard = os.path.join(eval_dir, f"leaderboard_{tag}.md")
     
+    logger = PipelineLogger(input_path, model_str)
+    log_file = os.path.join("data", "working", "pipeline_runs.jsonl")
+    
     from src.validator import validate_schema
     # 1. Extract
-    extract_rlm(scrubbed, kg_naive)
-    extract(scrubbed, None, kg_rlms)
-    extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)
-    extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2)
+    extractions = [
+        ("kg_naive", kg_naive, lambda: extract_rlm(scrubbed, kg_naive)),
+        ("kg_rlms", kg_rlms, lambda: extract(scrubbed, None, kg_rlms)),
+        ("kg_prop", kg_prop, lambda: extract(scrubbed, "src/prompts/propositional_kg.txt", kg_prop)),
+        ("kg_prop_v2", kg_prop_v2, lambda: extract(scrubbed, "src/prompts/propositional_v2_kg.txt", kg_prop_v2))
+    ]
+    
+    for name, path, func in extractions:
+        try:
+            func()
+            logger.record_extraction(name, True)
+        except Exception as e:
+            logger.record_extraction(name, False, str(e))
+            print(f"Extraction failed for {name}: {e}")
     
     # 2. Evaluate
     # Temporarily cd into eval_dir so answer_key gets saved with the date and model tag
@@ -60,14 +75,24 @@ def process_file(input_path: str):
     try:
         valid_kgs = []
         for kg in [kg_naive, kg_rlms, kg_prop, kg_prop_v2]:
+            kg_base = os.path.basename(kg)
             if kg == kg_naive:
-                valid_kgs.append(os.path.basename(kg))
+                valid_kgs.append(kg_base)
+                logger.record_validation("kg_naive", True)
                 continue
+                
             schema = "propositional_v2" if kg == kg_prop_v2 else "standard"
-            if validate_schema(os.path.join(original_cwd, kg), schema):
-                valid_kgs.append(os.path.basename(kg))
+            try:
+                is_valid = validate_schema(os.path.join(original_cwd, kg), schema)
+                if is_valid:
+                    valid_kgs.append(kg_base)
+                logger.record_validation(kg_base, is_valid)
+            except Exception as e:
+                logger.record_validation(kg_base, False)
+                print(f"Validation crashed for {kg_base}: {e}")
                 
         results = evaluate_pipeline(os.path.join(original_cwd, scrubbed), valid_kgs)
+        logger.record_scores(results)
         
         # 3. Write leaderboard
         with open(os.path.basename(leaderboard), "w") as f:
@@ -84,9 +109,13 @@ def process_file(input_path: str):
     reconstituted_file = os.path.join(reconstituted_dir, f"kg_propositional_{tag}_reconstituted.json")
     try:
         reconstitute(kg_prop, reconstituted_file)
+        logger.record_reconstitution(True)
         print(f"Reconstituted KG to {reconstituted_file}")
-    except FileNotFoundError as e:
+    except Exception as e:
+        logger.record_reconstitution(False, str(e))
         print(f"Skipping reconstitution for {base_name}: {e}")
+        
+    logger.flush(log_file)
 
 def main():
     init_directories()
