@@ -66,6 +66,11 @@ def process_file(input_path: str):
         ]
         
         for name, path, func in extractions:
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                print(f"Skipping extraction for {name}, file {os.path.basename(path)} already exists.")
+                logger.record_extraction(name, True)
+                continue
+                
             try:
                 func()
                 logger.record_extraction(name, True)
