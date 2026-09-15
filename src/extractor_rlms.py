@@ -44,7 +44,9 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
         I have provided the raw conversation transcript below.
         Your task is to write a python program to loop through this transcript and extract it into a 4-part JSON Knowledge Graph (Semantic, Episodic, Procedural, Active).
         
-        Save the final output JSON to 'output_rlms.json'.
+        CRITICAL REQUIREMENT:
+        You must write your script to aggressively save the in-progress JSON state to 'output_rlms.json' after EVERY SINGLE CHUNK you process. Do NOT hold the entire state in memory and wait until the end. This provides interim updates and prevents data loss if the API times out mid-extraction.
+        
         Make sure your python code executes quickly (under 30 seconds)."""
         
     import re
