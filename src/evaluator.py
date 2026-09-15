@@ -70,12 +70,18 @@ def run_pipeline(transcript_file: str, kg_files: list):
     with open(transcript_file, 'r') as f:
         transcript_str = json.dumps(json.load(f))[:8000]
         
-    answer_key = generate_answer_key(transcript_str)
-    
-    # Save the answer key to disk for visibility
     base_transcript = os.path.basename(transcript_file).replace(".json", "")
-    with open(f"{base_transcript}_answer_key.json", "w") as f:
-        json.dump(answer_key, f, indent=2)
+    answer_key_file = f"{base_transcript}_answer_key.json"
+    
+    if os.path.exists(answer_key_file):
+        print(f"\n--- PHASE 1: LOADING ANSWER KEY (found {answer_key_file}) ---")
+        with open(answer_key_file, "r") as f:
+            answer_key = json.load(f)
+    else:
+        answer_key = generate_answer_key(transcript_str)
+        # Save the answer key to disk for visibility
+        with open(answer_key_file, "w") as f:
+            json.dump(answer_key, f, indent=2)
     
     results = {}
     for kg_file in kg_files:
@@ -87,18 +93,29 @@ def run_pipeline(transcript_file: str, kg_files: list):
             print(f"Error loading {kg_file}: {e}. Skipping.")
             continue
             
-        retrieved = retrieve_answers(kg_str)
-        
-        # Save retrieved answers to disk for visibility
         base_name = os.path.basename(kg_file).replace(".json", "")
-        with open(f"{base_name}_retrieved.json", "w") as f:
-            json.dump(retrieved, f, indent=2)
-            
-        scores = judge_answers(answer_key, retrieved)
+        retrieved_file = f"{base_name}_retrieved.json"
         
-        # Save scores to disk for visibility
-        with open(f"{base_name}_scores.json", "w") as f:
-            json.dump(scores, f, indent=2)
+        if os.path.exists(retrieved_file):
+            print(f"Loading retrieved answers from {retrieved_file}")
+            with open(retrieved_file, "r") as f:
+                retrieved = json.load(f)
+        else:
+            retrieved = retrieve_answers(kg_str)
+            # Save retrieved answers to disk for visibility
+            with open(retrieved_file, "w") as f:
+                json.dump(retrieved, f, indent=2)
+            
+        scores_file = f"{base_name}_scores.json"
+        if os.path.exists(scores_file):
+            print(f"Loading scores from {scores_file}")
+            with open(scores_file, "r") as f:
+                scores = json.load(f)
+        else:
+            scores = judge_answers(answer_key, retrieved)
+            # Save scores to disk for visibility
+            with open(scores_file, "w") as f:
+                json.dump(scores, f, indent=2)
         
         avg_score = sum(scores) / len(scores) if scores else 0
         results[kg_file] = avg_score
