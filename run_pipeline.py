@@ -132,6 +132,11 @@ def process_file(input_path: str):
         logger.flush(log_file)
 
 def main():
+    if not os.environ.get("NVIDIA_API_KEY"):
+        print("FATAL ERROR: NVIDIA_API_KEY environment variable is not set.")
+        print("The pipeline requires LLM access and cannot run without it. Aborting.")
+        sys.exit(1)
+        
     init_directories()
     if len(sys.argv) < 2:
         print("Usage: python run_pipeline.py <file_path> or --all")
