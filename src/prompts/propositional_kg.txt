@@ -18,3 +18,7 @@ CRITICAL RULES:
 6. You MUST implement checkpointing and resumption! Save intermediate progress to `output_propositional_kg.json` after processing EVERY chunk. At the start of your script, check if `output_propositional_kg.json` already exists and load it so you can skip chunks you have already processed!
 
 Do not explain. Just output the python code.
+
+CRITICAL REQUIREMENT:
+You must write your script to aggressively save the in-progress JSON state to 'output.json' after EVERY SINGLE CHUNK you process. Do NOT hold the entire state in memory and wait until the end. This provides interim updates and prevents data loss if the API times out mid-extraction.
+
