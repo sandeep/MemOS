@@ -65,6 +65,9 @@ def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", 
         except requests.exceptions.HTTPError as e:
             if response.status_code == 429:
                 time.sleep(5 * (attempt + 1))
+            elif response.status_code in [500, 502, 503, 504]:
+                print(f"Server Error {response.status_code}, retrying...")
+                time.sleep(5 * (attempt + 1))
             else:
                 print(f"HTTP Error: {e}")
                 raise RuntimeError(f"LLM API HTTP Error: {e}")
