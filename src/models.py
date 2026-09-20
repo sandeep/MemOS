@@ -31,7 +31,7 @@ class EpisodicLedgerV1(BaseModel):
     rejected_branches: List[Dict[str, Any]] = Field(default_factory=list)
 
 class ProceduralMemoryV1(BaseModel):
-    instructions: List[Dict[str, Any]] = Field(default_factory=list)
+    instructions: List[Any] = Field(default_factory=list)
 
 class ActiveStateV1(BaseModel):
     current_goal: str = ""
@@ -39,10 +39,10 @@ class ActiveStateV1(BaseModel):
     next_action: str = ""
 
 class CognitiveGraphV1(BaseModel):
-    semantic_memory: SemanticMemoryV1 = Field(default_factory=SemanticMemoryV1)
-    episodic_ledger: EpisodicLedgerV1 = Field(default_factory=EpisodicLedgerV1)
-    procedural_memory: ProceduralMemoryV1 = Field(default_factory=ProceduralMemoryV1)
-    active_state: ActiveStateV1 = Field(default_factory=ActiveStateV1)
+    semantic_memory: SemanticMemoryV1 = Field(default_factory=SemanticMemoryV1, validation_alias=AliasChoices('semantic_memory', 'Semantic_Memory', 'Semantic', 'semantic'))
+    episodic_ledger: EpisodicLedgerV1 = Field(default_factory=EpisodicLedgerV1, validation_alias=AliasChoices('episodic_ledger', 'Episodic_Ledger', 'Episodic', 'episodic'))
+    procedural_memory: ProceduralMemoryV1 = Field(default_factory=ProceduralMemoryV1, validation_alias=AliasChoices('procedural_memory', 'Procedural_Memory', 'Procedural', 'procedural'))
+    active_state: ActiveStateV1 = Field(default_factory=ActiveStateV1, validation_alias=AliasChoices('active_state', 'Active_State', 'Active', 'active'))
 
     @model_validator(mode='after')
     def check_not_empty(self):
