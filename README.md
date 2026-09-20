@@ -163,8 +163,8 @@ The evaluator dynamically scores the graph across 5 distinct domains to test com
 
 ### Experiment 4: Schema Flattening & Syntax Friction
 **Hypothesis:** Flattening a hierarchical nested JSON schema into relational triples (Subject-Relation-Object) will improve LLM extraction accuracy by reducing syntax generation overhead.
-**Result:** MASSIVE SUCCESS.
+**Result:** Improved extraction accuracy.
 **Observations:** 
-1. **Validation Failures:** The `kg_rlms` and `kg_propositional` schemas forced the LLM into deeply nested lists of dictionaries. The LLM rebelled, prioritizing semantic facts over syntax (e.g., outputting a list of strings instead), which caused hard Pydantic validation failures.
-2. **Triple Dominance:** `kg_propositional_v2` flattened the entire cognitive map into pure triples. The syntax friction vanished, allowing the LLM to allocate its full context budget to deep semantic extraction.
-**Conclusion:** `kg_propositional_v2` achieved an **87.5%** accuracy score against the baseline's **65.0%**, proving that syntax friction actively destroys semantic extraction. Furthermore, V2's triple-based output natively aligns with Dialogue Relation Extraction (DialogRE) benchmarks, priming the architecture for academic datasets.
+1. **Validation Failures:** The `kg_rlms` and `kg_propositional` schemas forced the LLM into deeply nested lists of dictionaries. The LLM prioritized semantic facts over syntax (e.g., outputting a list of strings instead), which caused hard Pydantic validation failures.
+2. **Triple Representation:** `kg_propositional_v2` flattened the entire cognitive map into pure triples. Reduced syntax friction allowed the LLM to allocate its full context budget to deep semantic extraction.
+**Conclusion:** `kg_propositional_v2` achieved an **87.5%** accuracy score against the baseline's **65.0%**, indicating that syntax overhead degrades semantic extraction performance. Furthermore, V2's triple-based output natively aligns with Dialogue Relation Extraction (DialogRE) benchmarks, priming the architecture for academic datasets.
