@@ -16,3 +16,9 @@ The `RLMS` (Recursive Language Modeling System) architecture and the "RLM Sandwi
 ## 3. Flat Relational Extraction (Triples)
 Our breakthrough with `Propositional V2` proved that deeply nested hierarchical JSON schemas cause LLMs to fail due to syntax friction. 
 * **Resource Description Framework (RDF) & DialogRE:** Academic benchmarks for Dialogue Relation Extraction (DialogRE) prove that LLMs extract conversational data much more accurately when constrained to flat, relational `(Subject, Relation, Object)` triples rather than deeply nested Object-Oriented architectures.
+
+## 4. Autonomous Memory and Graph Architectures
+To contextualize our pipeline against the current State-of-the-Art (SOTA) in agentic memory:
+* **MemGPT / Letta:** *Packer et al., 2023.* Pioneered the "LLM-as-an-OS" paradigm, managing hierarchical memory blocks (Core vs. Archival). Our pipeline solves the extraction friction that agents like MemGPT face when trying to autonomously read/write complex state.
+* **GraphRAG:** *Edge et al., 2024 (Microsoft).* Demonstrated that standard vector search (RAG) fails at global, multi-hop reasoning, and that LLMs require connected Knowledge Graphs for true comprehension.
+* **DialogRE:** *Yu et al., 2020.* The foundational dataset and benchmark for Dialogue Relation Extraction, establishing the standard F1 scoring metric for multi-turn conversational extraction.
