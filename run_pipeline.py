@@ -22,7 +22,7 @@ from src.extractor import extract_rlm
 from src.logger import PipelineLogger
 import traceback
 try:
-    from src.extractor_rlms import extract
+    from src.extractor_recursive import extract
 except ImportError:
     def extract(conversation_file: str, prompt_file: str = None, output_file: str = "output_rlms.json"):
         raise RuntimeError("extract from extractor_rlms unavailable: missing 'rlm' package")
@@ -46,11 +46,14 @@ def process_file(input_path: str):
     scrubbed = copy_to_scrubbed(input_path)
     print(f"Scrubbed to {scrubbed}")
     
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    model_str = "gemma4_31b" # Defaulting for now
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    model_str = "llama-3.1-70b" # Defaulting back to authorized model
     tag = f"{date_str}_{model_str}"
     
-    kg_naive = os.path.join(eval_dir, f"kg_naive_{tag}.json")
+    date_only = datetime.datetime.now().strftime("%Y-%m-%d")
+    naive_matches = glob.glob(os.path.join(eval_dir, f"kg_naive_{date_only}_{model_str}*.json"))
+    kg_naive = naive_matches[0] if naive_matches else os.path.join(eval_dir, f"kg_naive_{tag}.json")
+    
     kg_rlms = os.path.join(eval_dir, f"kg_rlms_{tag}.json")
     kg_prop = os.path.join(eval_dir, f"kg_propositional_{tag}.json")
     kg_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
@@ -80,10 +83,10 @@ def process_file(input_path: str):
                 continue
                 
             try:
-                func()
-                logger.record_extraction(name, True)
+                repaired = func()
+                logger.record_extraction(name, True, repaired=bool(repaired))
             except Exception as e:
-                logger.record_extraction(name, False, str(e))
+                logger.record_extraction(name, False, error=str(e))
                 print(f"Extraction failed for {name}: {e}")
         
         # 2. Evaluate
