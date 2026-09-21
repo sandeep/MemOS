@@ -27,9 +27,8 @@ Transcript:
 {transcript_str}
 """
     print(f"Mechanically generating 15-question rubric for {os.path.basename(transcript_path)}...")
-    response = call_llm(prompt)
-    with open(transcript_path.replace('.json', '_rubric.raw.txt'), 'w') as f:
-        f.write(response)
+    task_id = os.path.basename(transcript_path).replace(".json", "") + "_rubric"
+    response = call_llm(prompt, task_id=task_id)
     
     # Extract JSON array
     match = re.search(r'\[.*\]', response, re.DOTALL)

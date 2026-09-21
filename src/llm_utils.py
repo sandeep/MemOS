@@ -5,7 +5,7 @@ import hashlib
 
 NVIDIA_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-def call_llm(prompt: str, model: str = "meta-llama/llama-3.1-70b-instruct", temp: float = 0.0, max_tokens: int = 4096, cache_dir: str = "llm_cache") -> str:
+def call_llm(prompt: str, model: str = "meta-llama/llama-3.1-70b-instruct", temp: float = 0.0, max_tokens: int = 4096, cache_dir: str = "llm_cache", task_id: str = None) -> str:
     """
     Unified LLM calling function that handles:
     1. Caching
@@ -13,9 +13,12 @@ def call_llm(prompt: str, model: str = "meta-llama/llama-3.1-70b-instruct", temp
     3. Stripping 'Thinking Process' logs from reasoning models
     """
     # Caching logic
-    prompt_hash = hashlib.md5((prompt + model + str(temp)).encode()).hexdigest()
     os.makedirs(cache_dir, exist_ok=True)
-    cache_file = os.path.join(cache_dir, f"{prompt_hash}.txt")
+    if task_id:
+        cache_file = os.path.join(cache_dir, f"{task_id}.txt")
+    else:
+        prompt_hash = hashlib.md5((prompt + model + str(temp)).encode()).hexdigest()
+        cache_file = os.path.join(cache_dir, f"{prompt_hash}.txt")
     
     if os.path.exists(cache_file):
         with open(cache_file, "r") as f:
