@@ -1,0 +1,39 @@
+{
+  "semantic_memory": {
+    "nodes": [
+      {
+        "description": "..."
+      }
+    ],
+    "edges": [
+      {
+        "source": "...",
+        "target": "...",
+        "relation": "..."
+      }
+    ]
+  },
+  "episodic_ledger": {
+    "events": [
+      {
+        "event": "...",
+        "description": "..."
+      }
+    ],
+    "decisions": [],
+    "rejected_branches": []
+  },
+  "procedural_memory": {
+    "instructions": [
+      {
+        "step": 1,
+        "action": "..."
+      }
+    ]
+  },
+  "active_state": {
+    "current_goal": "",
+    "blockers": [],
+    "next_action": ""
+  }
+}

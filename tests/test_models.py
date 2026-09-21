@@ -1,5 +1,6 @@
 from src.models import CognitiveGraphV2, CognitiveGraphV1
 import json
+import pytest
 
 def test_v2_alias_coercion():
     raw = {

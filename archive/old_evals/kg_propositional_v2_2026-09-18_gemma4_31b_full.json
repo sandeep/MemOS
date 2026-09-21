@@ -1,0 +1,89 @@
+{
+  "semantic": [
+    {
+      "subject": "User",
+      "relation": "professional_role",
+      "object": "Senior Tech Executive (SVP/CPO level)"
+    },
+    {
+      "subject": "User",
+      "relation": "educational_background",
+      "object": "Business School, Doctor of Engineering"
+    },
+    {
+      "subject": "User",
+      "relation": "personality_type",
+      "object": "ENTJ"
+    },
+    {
+      "subject": "User",
+      "relation": "cognitive_style",
+      "object": "Highly logical, crisp, focused on facts over feelings"
+    },
+    {
+      "subject": "User",
+      "relation": "belief",
+      "object": "Success must be measurable and failure quantifiable"
+    },
+    {
+      "subject": "Taste",
+      "relation": "defined_as",
+      "object": "Specialized form of data processing and pattern recognition"
+    },
+    {
+      "subject": "Tastemaker",
+      "relation": "function",
+      "object": "System Governor for non-utilitarian asset markets"
+    },
+    {
+      "subject": "Cultural Capital",
+      "relation": "definition",
+      "object": "Intangible asset earned through mastery of a field's protocol"
+    },
+    {
+      "subject": "Intersubjective Agreement",
+      "relation": "role",
+      "object": "Creates value in the absence of intrinsic utility"
+    }
+  ],
+  "episodic": [
+    {
+      "subject": "User",
+      "relation": "expressed_skepticism_about",
+      "object": "The validity of taste-based professions (e.g., wine tasters, art collectors)",
+      "step": 1
+    },
+    {
+      "subject": "AI",
+      "relation": "explained_taste_via",
+      "object": "Psychological, Sociological, and Philosophical lenses",
+      "step": 2
+    },
+    {
+      "subject": "User",
+      "relation": "accepted",
+      "object": "Psychological and Economic explanations but struggled with Sociological lens",
+      "step": 3
+    },
+    {
+      "subject": "AI",
+      "relation": "attempted_analogy",
+      "object": "Blockchain/Distributed Ledger to explain sociological consensus",
+      "step": 4
+    },
+    {
+      "subject": "User",
+      "relation": "rejected_analogy",
+      "object": "Blockchain due to its contentious value",
+      "step": 5
+    },
+    {
+      "subject": "AI",
+      "relation": "reframed_analogy",
+      "object": "Apple iOS Ecosystem to explain curation and gatekeeping",
+      "step": 6
+    }
+  ],
+  "procedural": [],
+  "active": []
+}

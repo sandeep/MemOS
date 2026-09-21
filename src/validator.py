@@ -4,9 +4,12 @@ from src.models import CognitiveGraphV1, CognitiveGraphV2
 
 def extract_json_block(text: str) -> str:
     match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-    if match: return match.group(1).strip()
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if match: return match.group(0).strip()
+    if match: 
+        text = match.group(1).strip()
+    else:
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match: text = match.group(0).strip()
+        
     return text
 
 def validate_and_normalize(raw_text: str, expected_schema: str) -> str:

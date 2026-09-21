@@ -1,0 +1,11 @@
+MISSION: We are going to synthesize conversations between an AI agent and a human so that the conversation can be seamlessly continued later. Your goal is to reduce unnecessary content in the chat turns without losing any fidelity or conversational state.
+
+To achieve this, extract a 4-part JSON Knowledge Graph (Semantic, Episodic, Procedural, Active).
+
+Output ONLY valid JSON matching this exact structure, with no markdown formatting:
+{
+  "semantic_memory": {"nodes": [], "edges": []}, 
+  "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []}, 
+  "procedural_memory": {"instructions": []}, 
+  "active_state": {"current_goal": "", "blockers": [], "next_action": ""}
+}

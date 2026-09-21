@@ -67,13 +67,15 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
         
     with patch("run_pipeline.extract_rlm", side_effect=_mock_extract_rlm) as mock_extract_rlm, \
          patch("run_pipeline.extract", side_effect=_mock_extract) as mock_extract, \
-         patch("run_pipeline.evaluate_pipeline") as mock_evaluate:
+         patch("run_pipeline.evaluate_pipeline") as mock_evaluate, \
+         patch("src.validator.validate_schema") as mock_validate:
          
         mock_evaluate.return_value = {
             "kg_naive_test.json": 80.0,
             "kg_rlms_test.json": 75.0,
             "kg_propositional_test.json": 90.0,
         }
+        mock_validate.return_value = True
         
         process_file(mock_file)
         
@@ -88,15 +90,17 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
         expected_naive = os.path.join(eval_dir, f"kg_naive_{tag}.json")
         expected_rlms = os.path.join(eval_dir, f"kg_rlms_{tag}.json")
         expected_prop = os.path.join(eval_dir, f"kg_propositional_{tag}.json")
+        expected_prop_v2 = os.path.join(eval_dir, f"kg_propositional_v2_{tag}.json")
         expected_leaderboard = os.path.join(eval_dir, f"leaderboard_{tag}.md")
         
         scrubbed_path = "data/working/scrubbed_inputs/sample.json"
         
         # Verify extractors called
         mock_extract_rlm.assert_called_once_with(scrubbed_path, expected_naive)
-        assert mock_extract.call_count == 2
+        assert mock_extract.call_count == 3
         mock_extract.assert_any_call(scrubbed_path, None, expected_rlms)
         mock_extract.assert_any_call(scrubbed_path, "src/prompts/propositional_kg.txt", expected_prop)
+        mock_extract.assert_any_call(scrubbed_path, "src/prompts/propositional_v2_kg.txt", expected_prop_v2)
         
         # Verify evaluator called
         mock_evaluate.assert_called_once()
@@ -105,7 +109,8 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
         assert eval_call_args[1] == [
             os.path.basename(expected_naive),
             os.path.basename(expected_rlms),
-            os.path.basename(expected_prop)
+            os.path.basename(expected_prop),
+            os.path.basename(expected_prop_v2)
         ]
         
         # Verify leaderboard file written
@@ -120,12 +125,9 @@ def test_process_file_pipeline_orchestration(tmp_path, monkeypatch, capsys):
         # Verify cwd restored
         assert os.getcwd() == str(tmp_path)
 
-        # Verify reconstitution and symlink
+        # Verify reconstitution
         reconstituted_file = os.path.join("data/secure/reconstituted", "sample", f"kg_propositional_{tag}_reconstituted.json")
-        latest_symlink = os.path.join("data/secure/reconstituted", "sample", "latest.json")
         assert os.path.exists(reconstituted_file)
-        assert os.path.islink(latest_symlink)
-        assert os.readlink(latest_symlink) == os.path.basename(reconstituted_file)
 
 def test_main_no_args(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)

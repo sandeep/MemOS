@@ -45,6 +45,8 @@ def extract(conversation_file: str, prompt_file: str = None, output_file: str = 
         )
         
         raw_extraction = call_llm(sub_prompt)
+        with open(output_file + '.raw.txt', 'w') as f:
+            f.write(raw_extraction)
         
         # 5. Robustly parse JSON blocks
         json_blocks = re.findall(r'```(?:json)?\s*(\{.*?\})\s*```', raw_extraction, re.DOTALL)

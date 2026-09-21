@@ -22,16 +22,35 @@ def scrub_pii(text: str) -> str:
 
 def merge_graphs(master, new_data):
     if not new_data: return master
-    sem = new_data.get("semantic_memory", {})
-    master["semantic_memory"]["nodes"].extend(sem.get("nodes", []))
-    master["semantic_memory"]["edges"].extend(sem.get("edges", []))
-    ep = new_data.get("episodic_ledger", {})
-    master["episodic_ledger"]["events"].extend(ep.get("events", []))
-    master["episodic_ledger"]["decisions"].extend(ep.get("decisions", []))
-    master["episodic_ledger"]["rejected_branches"].extend(ep.get("rejected_branches", []))
-    proc = new_data.get("procedural_memory", {})
-    master["procedural_memory"]["instructions"].extend(proc.get("instructions", []))
-    master["active_state"] = new_data.get("active_state", master["active_state"])
+    
+    if "semantic_memory" in master or "semantic_memory" in new_data:
+        if "semantic_memory" not in master:
+            master = {
+                "semantic_memory": {"nodes": [], "edges": []},
+                "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []},
+                "procedural_memory": {"instructions": []},
+                "active_state": {"current_goal": "", "blockers": [], "next_action": ""}
+            }
+        sem = new_data.get("semantic_memory", {})
+        master["semantic_memory"]["nodes"].extend(sem.get("nodes", []))
+        master["semantic_memory"]["edges"].extend(sem.get("edges", []))
+        ep = new_data.get("episodic_ledger", {})
+        master["episodic_ledger"]["events"].extend(ep.get("events", []))
+        master["episodic_ledger"]["decisions"].extend(ep.get("decisions", []))
+        master["episodic_ledger"]["rejected_branches"].extend(ep.get("rejected_branches", []))
+        proc = new_data.get("procedural_memory", {})
+        master["procedural_memory"]["instructions"].extend(proc.get("instructions", []))
+        
+    elif "Semantic" in master or "Semantic" in new_data or "semantic" in new_data:
+        if "Semantic" not in master:
+            master = {"Semantic": [], "Episodic": [], "Procedural": [], "Active": []}
+        
+        for key in ["Semantic", "Episodic", "Procedural", "Active"]:
+            items = new_data.get(key, new_data.get(key.lower(), []))
+            if isinstance(items, list):
+                master.setdefault(key, []).extend(items)
+            elif isinstance(items, dict):
+                master.setdefault(key, []).extend(items.values())
     return master
 
 def extract_rlm(conversation_file: str, output_file: str = "output.json"):
@@ -41,8 +60,8 @@ def extract_rlm(conversation_file: str, output_file: str = "output.json"):
     safe_transcript = scrub_pii(transcript)
     
     # 3. FILTER / CHUNKING
-    # Split by chunks of 3000 chars to match typical RLM chunk size
-    chunks = [safe_transcript[i:i+3000] for i in range(0, len(safe_transcript), 3000)]
+    # Split by chunks of 10000 chars to match typical RLM chunk size
+    chunks = [safe_transcript[i:i+10000] for i in range(0, len(safe_transcript), 10000)]
     
     # 4. RECURSIVE EXTRACT
     master_graph = {
@@ -64,16 +83,23 @@ def extract_rlm(conversation_file: str, output_file: str = "output.json"):
         raw_extraction = call_llm(sub_prompt)
         
         # Robustly extract JSON to bypass CoT and markdown
-        start_idx = raw_extraction.find('{')
-        end_idx = raw_extraction.rfind('}')
-        if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
-            raw_extraction = raw_extraction[start_idx:end_idx+1]
-            
-        try:
-            parsed = json.loads(raw_extraction)
-            master_graph = merge_graphs(master_graph, parsed)
-        except Exception as e:
-            print(f"Failed to parse chunk JSON: {e}")
+        # BUGFIX: The LLM sometimes outputs multiple JSON objects or includes markdown formatting.
+        # We need to robustly extract all JSON blocks from the string.
+        json_blocks = re.findall(r'```(?:json)?\s*(\{.*?\})\s*```', raw_extraction, re.DOTALL)
+        
+        if not json_blocks:
+            # Fallback: if no markdown blocks, try finding the outer braces
+            start_idx = raw_extraction.find('{')
+            end_idx = raw_extraction.rfind('}')
+            if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
+                json_blocks = [raw_extraction[start_idx:end_idx+1]]
+        
+        for block in json_blocks:
+            try:
+                parsed = json.loads(block)
+                master_graph = merge_graphs(master_graph, parsed)
+            except Exception as e:
+                print(f"Failed to parse chunk JSON block: {e}")
             
     # 5. SUBMIT
     os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)

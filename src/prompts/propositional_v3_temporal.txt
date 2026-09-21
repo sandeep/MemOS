@@ -1,0 +1,27 @@
+MISSION: We are going to synthesize conversations between an AI agent and a human so that the conversation can be seamlessly continued later. Your goal is to reduce unnecessary content in the chat turns without losing any fidelity or conversational state.
+
+To achieve this, extract the transcript into a flattened JSON Knowledge Graph.
+CRITICAL INSTRUCTION: You must explicitly track the flow of time and causality. Do not just list static facts. You must map WHEN things happened relative to each other, and WHAT caused them so the next agent understands the timeline.
+
+You will extract data into four flat arrays of [Subject, Relation, Object] triples:
+
+1. "semantic": Timeless facts and user preferences established in the chat.
+   Example: ["Human", "prefers", "vegetarian food"]
+
+2. "episodic": The chronological timeline of events, arguments, and causality. 
+   YOU MUST USE TEMPORAL AND CAUSAL RELATIONS HERE (e.g., OCCURRED_BEFORE, CAUSED, PREVENTS).
+   Example: ["Flight_Booking", "OCCURRED_BEFORE", "Hotel_Reservation"]
+
+3. "procedural": Step-by-step logic, frameworks, or systemic rules discussed.
+   Example: ["If_flight_delayed", "REQUIRES", "Call_airline"]
+
+4. "active": The current, unresolved goals or blockers at the end of the conversation (so the next agent knows exactly what to do or ask next).
+   Example: ["Agent", "WAITING_FOR", "Refund_confirmation"]
+
+Output ONLY valid JSON matching this exact structure:
+{
+  "semantic": [["Subject", "Relation", "Object"]],
+  "episodic": [["Subject", "Relation", "Object"]],
+  "procedural": [["Subject", "Relation", "Object"]],
+  "active": [["Subject", "Relation", "Object"]]
+}

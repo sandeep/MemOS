@@ -1,0 +1,50 @@
+{
+  "semantic_memory": {
+    "nodes": [
+      {
+        "description": "The user is a senior tech executive in a global world leading company."
+      },
+      {
+        "description": "The user's level is comparable to SVPCPO."
+      },
+      {
+        "description": "The user possesses business school credentials and a Doctor engineering degree."
+      },
+      {
+        "description": "The user is an ENTJ."
+      },
+      {
+        "description": "The user is highly logical and crisp."
+      },
+      {
+        "description": "The user deals in the world of facts not feelings."
+      },
+      {
+        "description": "The user understands the need to lead with empathy in order to move teams and drive action."
+      },
+      {
+        "description": "The user understands many or most jobs 'work'."
+      },
+      {
+        "description": "The user does not quite understand jobs involving taste or taste making, such as wine tasters, coffee tasters, or art collectors."
+      },
+      {
+        "description": "Taste making seems made up to the user."
+      }
+    ],
+    "edges": []
+  },
+  "episodic_ledger": {
+    "events": [],
+    "decisions": [],
+    "rejected_branches": []
+  },
+  "procedural_memory": {
+    "instructions": []
+  },
+  "active_state": {
+    "current_goal": "The user is requesting an explanation of what is happening regarding taste-making.",
+    "blockers": [],
+    "next_action": "The user wants the explanation delivered by someone acting as a highly erudite philosopher, psychologist, and sociologist."
+  }
+}

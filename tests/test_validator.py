@@ -18,7 +18,7 @@ def test_validate_schema_normalizes_casing(tmp_path):
 def test_validate_schema_v1(tmp_path):
     kg_file = tmp_path / "v1.json"
     kg_file.write_text(json.dumps({
-        "semantic_memory": {"nodes": [], "edges": []},
+        "semantic_memory": {"nodes": [{"id": "n1", "label": "L", "attributes": {}, "source": "src"}], "edges": []},
         "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []},
         "procedural_memory": {"instructions": []},
         "active_state": {"current_goal": "", "blockers": [], "next_action": ""}

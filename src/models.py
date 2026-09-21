@@ -22,13 +22,13 @@ class CognitiveGraphV2(BaseModel):
         return self
 
 class SemanticMemoryV1(BaseModel):
-    nodes: List[Dict[str, Any]] = Field(default_factory=list)
-    edges: List[Dict[str, Any]] = Field(default_factory=list)
+    nodes: List[Any] = Field(default_factory=list)
+    edges: List[Any] = Field(default_factory=list)
 
 class EpisodicLedgerV1(BaseModel):
-    events: List[Dict[str, Any]] = Field(default_factory=list)
-    decisions: List[Dict[str, Any]] = Field(default_factory=list)
-    rejected_branches: List[Dict[str, Any]] = Field(default_factory=list)
+    events: List[Any] = Field(default_factory=list)
+    decisions: List[Any] = Field(default_factory=list)
+    rejected_branches: List[Any] = Field(default_factory=list)
 
 class ProceduralMemoryV1(BaseModel):
     instructions: List[Any] = Field(default_factory=list)
