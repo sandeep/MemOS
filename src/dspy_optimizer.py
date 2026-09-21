@@ -20,7 +20,7 @@ student_lm = dspy.LM(
 
 # Teacher: The model that writes the optimized instructions for the student (Frontier model)
 teacher_lm = dspy.LM(
-    "anthropic/claude-3.5-sonnet", 
+    "anthropic/claude-sonnet-latest", 
     api_base="https://openrouter.ai/api/v1", 
     api_key=openrouter_key
 )
