@@ -20,7 +20,7 @@ student_lm = dspy.LM(
 
 # Teacher: The model that writes the optimized instructions for the student (Frontier model)
 teacher_lm = dspy.LM(
-    "anthropic/claude-sonnet-latest", 
+    "openai/gpt-4o", 
     api_base="https://openrouter.ai/api/v1", 
     api_key=openrouter_key
 )
@@ -52,7 +52,7 @@ def llm_judge_metric(example, pred, trace=None):
         retrieved = retrieve_answers(pred.cognitive_graph_json)
         scores = judge_answers(ground_truth, retrieved)
         
-        return float(sum(scores) / len(scores)) if scores else 0.0
+        return float((sum(scores) / len(scores)) / 100.0) if scores else 0.0
     except Exception:
         return 0.0
 
@@ -66,7 +66,7 @@ class CognitiveExtractor(dspy.Module):
         return self.extractor(transcript=transcript)
 
 def main():
-    print("DSPy Optimizer initialized with Llama-3.1-70B (Student) and Claude 3.5 Sonnet (Teacher).")
+    print("DSPy Optimizer initialized with Llama-3.1-70B (Student) and GPT-4o (Teacher).")
     # Setup the optimizer (MIPRO)
     teleprompter = dspy.MIPROv2(
         metric=llm_judge_metric,
