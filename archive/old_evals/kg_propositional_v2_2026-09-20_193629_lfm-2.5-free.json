@@ -1,0 +1,452 @@
+{
+  "semantic": [
+    {
+      "subject": "User",
+      "relation": "possesses_trait",
+      "object": "ENTJ personality"
+    },
+    {
+      "subject": "User",
+      "relation": "holds_academic_degree",
+      "object": "Doctorate in Engineering"
+    },
+    {
+      "subject": "User",
+      "relation": "has_role",
+      "object": "Senior Tech Executive"
+    },
+    {
+      "subject": "Taste",
+      "relation": "processed_by",
+      "object": "Information system"
+    },
+    {
+      "subject": "taster",
+      "relation": "engages_in",
+      "object": "highly refined sensory data processing and pattern recognition"
+    },
+    {
+      "subject": "human sensory apparatus",
+      "relation": "acts_as",
+      "object": "sensory instruments"
+    },
+    {
+      "subject": "master sommelier",
+      "relation": "spends_time_on",
+      "object": "calibrating palate to identify specific chemical compounds"
+    },
+    {
+      "subject": "methoxypyrazine",
+      "relation": "identified_by",
+      "object": "note of cassis in Cabernet Sauvignon"
+    },
+    {
+      "subject": "brain",
+      "relation": "builds",
+      "object": "vast library correlating sensory inputs with chemical reality"
+    },
+    {
+      "subject": "Methoxypyrazine",
+      "relation": "found_in",
+      "object": "blackcurrants and green bell peppers"
+    },
+    {
+      "subject": "Taste evaluation",
+      "relation": "converts",
+      "object": "communicable information"
+    },
+    {
+      "subject": "Specialized lexicon",
+      "relation": "enables",
+      "object": "transformation of subjective experience into shared reality"
+    },
+    {
+      "subject": "Lens 2",
+      "relation": "focuses_on",
+      "object": "sociological challenges"
+    },
+    {
+      "subject": "Blockchain",
+      "relation": "serves_as",
+      "object": "analogy_for_sociology"
+    },
+    {
+      "subject": "Cultural Capital",
+      "relation": "equivalent_to",
+      "object": "Reputation_Trust_Score"
+    },
+    {
+      "subject": "Validator_Node",
+      "relation": "functions_as",
+      "object": "Tastemaker"
+    },
+    {
+      "subject": "Critic",
+      "relation": "provides_proof_of_work",
+      "object": "reputation"
+    },
+    {
+      "subject": "Cultural_capital",
+      "relation": "is_at_stake",
+      "object": "judgment"
+    },
+    {
+      "subject": "Validator",
+      "relation": "acts_as",
+      "object": "governance_protocol"
+    },
+    {
+      "subject": "Actors",
+      "relation": "coordinate_behavior",
+      "object": "publicly_validated_focal_point"
+    },
+    {
+      "subject": "platform owners",
+      "relation": "act_as",
+      "object": "tastemakers"
+    },
+    {
+      "subject": "sociological lens",
+      "relation": "avoids",
+      "object": "blockchain"
+    },
+    {
+      "subject": "iOS ecosystem",
+      "relation": "functions_as",
+      "object": "value_creation_system"
+    },
+    {
+      "subject": "tastemaker",
+      "relation": "influences",
+      "object": "user_decision_making"
+    },
+    {
+      "subject": "Apple",
+      "relation": "establishes",
+      "object": "quality floor"
+    },
+    {
+      "subject": "Apple",
+      "relation": "filters",
+      "object": "low-quality applications"
+    },
+    {
+      "subject": "Human Interface Guidelines",
+      "relation": "codifies",
+      "object": "specific taste philosophy"
+    },
+    {
+      "subject": "Tastemaker",
+      "relation": "is",
+      "object": "System Governor"
+    }
+  ],
+  "episodic": [
+    {
+      "subject": "User",
+      "relation": "expressed_skepticism_about",
+      "object": "unquantifiable metrics",
+      "step": 1
+    },
+    {
+      "subject": "User",
+      "relation": "seeking_to_understand",
+      "object": "how to present taste as a structured system",
+      "step": 2
+    },
+    {
+      "subject": "User",
+      "relation": "exploring",
+      "object": "mapping taste to data processing concepts",
+      "step": 3
+    },
+    {
+      "subject": "User",
+      "relation": "developing",
+      "object": "framework connecting subjective experience to measurable value",
+      "step": 4
+    },
+    {
+      "subject": "master sommelier",
+      "relation": "spends",
+      "object": "training their palate to identify and isolate specific chemical compounds",
+      "step": 1
+    },
+    {
+      "subject": "taster",
+      "relation": "develops",
+      "object": "specialized lexicon for converting sensory data to communicable information",
+      "step": 2
+    },
+    {
+      "subject": "taster",
+      "relation": "applies",
+      "object": "pattern recognition to compare samples against known frameworks",
+      "step": 3
+    },
+    {
+      "subject": "tastemaker",
+      "relation": "reduces",
+      "object": "uncertainty and creates market value",
+      "step": 4
+    },
+    {
+      "subject": "User",
+      "relation": "examines",
+      "object": "sample containing methoxypyrazine",
+      "step": 1
+    },
+    {
+      "subject": "User",
+      "relation": "consults",
+      "object": "specialized lexicon",
+      "step": 2
+    },
+    {
+      "subject": "User",
+      "relation": "applies",
+      "object": "sensory acuity",
+      "step": 3
+    },
+    {
+      "subject": "User",
+      "relation": "compares",
+      "object": "established frameworks",
+      "step": 4
+    },
+    {
+      "subject": "User",
+      "relation": "identifies",
+      "object": "Lens 2",
+      "step": 1
+    },
+    {
+      "subject": "User",
+      "relation": "explores",
+      "object": "tech_analogies",
+      "step": 2
+    },
+    {
+      "subject": "AI",
+      "relation": "formulates",
+      "object": "concrete_framework",
+      "step": 3
+    },
+    {
+      "subject": "Validator",
+      "relation": "assesses",
+      "object": "new_vintage_wine",
+      "step": 1
+    },
+    {
+      "subject": "Validator",
+      "relation": "publishes",
+      "object": "validation_block",
+      "step": 2
+    },
+    {
+      "subject": "Network",
+      "relation": "reaches_consensus",
+      "object": "market_network",
+      "step": 3
+    },
+    {
+      "subject": "Wine",
+      "relation": "state_updated",
+      "object": "ledger_entry_with_high_price",
+      "step": 4
+    },
+    {
+      "subject": "analyst",
+      "relation": "conducted",
+      "object": "initial_analysis_of_feedback",
+      "step": 1
+    },
+    {
+      "subject": "analyst",
+      "relation": "brainstormed",
+      "object": "potential_frameworks",
+      "step": 2
+    },
+    {
+      "subject": "analyst",
+      "relation": "developed",
+      "object": "system_analogy",
+      "step": 3
+    },
+    {
+      "subject": "analyst",
+      "relation": "refined",
+      "object": "iOS_analogy",
+      "step": 4
+    },
+    {
+      "subject": "analyst",
+      "relation": "finalized",
+      "object": "explanation",
+      "step": 5
+    },
+    {
+      "subject": "Apple",
+      "relation": "establishes",
+      "object": "quality floor",
+      "step": 1
+    },
+    {
+      "subject": "Apple",
+      "relation": "imposes",
+      "object": "coherent design standard",
+      "step": 2
+    },
+    {
+      "subject": "Apple",
+      "relation": "directs",
+      "object": "flow of capital and effort",
+      "step": 3
+    }
+  ],
+  "procedural": [
+    {
+      "subject": "Taste Evaluation",
+      "relation": "requires",
+      "object": "Sensory acuity"
+    },
+    {
+      "subject": "Taste Framework",
+      "relation": "involves",
+      "object": "pattern recognition and shared lexicons"
+    },
+    {
+      "subject": "Value Conversion",
+      "relation": "uses",
+      "object": "established lexicons and intersubjective agreements"
+    },
+    {
+      "subject": "taster",
+      "relation": "requires",
+      "object": "sensory acuity"
+    },
+    {
+      "subject": "tasting process",
+      "relation": "involves",
+      "object": "diagnostic evaluation against established patterns"
+    },
+    {
+      "subject": "Q Grader",
+      "relation": "utilizes",
+      "object": "calibrated sensory instruments for chemical compound identification"
+    },
+    {
+      "subject": "Taste evaluation",
+      "relation": "requires",
+      "object": "sensory acuity"
+    },
+    {
+      "subject": "Transformation of subjective experience into intersubjective reality",
+      "relation": "requires",
+      "object": "specialized lexicon"
+    },
+    {
+      "subject": "Mapping Process",
+      "relation": "involves",
+      "object": "abstract_to_concrete_translation"
+    },
+    {
+      "subject": "Translation",
+      "relation": "uses",
+      "object": "blockchain_metaphors"
+    },
+    {
+      "subject": "Validation",
+      "relation": "requires",
+      "object": "consensus_mechanisms"
+    },
+    {
+      "subject": "Taste_Evaluation",
+      "relation": "requires",
+      "object": "Sensory_acuity"
+    },
+    {
+      "subject": "platform owners",
+      "relation": "utilize",
+      "object": "app_store_reviews_and_design_guidelines"
+    },
+    {
+      "subject": "researcher",
+      "relation": "creates",
+      "object": "comparative_table"
+    },
+    {
+      "subject": "AI",
+      "relation": "applies",
+      "object": "curation_authority_role"
+    },
+    {
+      "subject": "Taste Evaluation",
+      "relation": "requires",
+      "object": "Sensory acuity"
+    },
+    {
+      "subject": "App Store Curators",
+      "relation": "enforce",
+      "object": "design standards"
+    }
+  ],
+  "active": [
+    {
+      "subject": "AI",
+      "relation": "is_currently_addressing",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "AI",
+      "relation": "facilitating",
+      "object": "construction of taste-as-logic framework"
+    },
+    {
+      "subject": "AI",
+      "relation": "is_currently_addressing",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "taste evaluation",
+      "relation": "requires",
+      "object": "Sensory acuity"
+    },
+    {
+      "subject": "expert taster",
+      "relation": "operates_as",
+      "object": "human data-processing engine for non-numeric sensory data"
+    },
+    {
+      "subject": "AI",
+      "relation": "is_currently_addressing",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "AI",
+      "relation": "addresses",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "Framework",
+      "relation": "supports",
+      "object": "shared_value_creation"
+    },
+    {
+      "subject": "AI",
+      "relation": "is_currently_addressing",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "AI",
+      "relation": "addresses",
+      "object": "User's need for objective standards"
+    },
+    {
+      "subject": "AI",
+      "relation": "is_currently_addressing",
+      "object": "User's need for objective standards"
+    }
+  ]
+}

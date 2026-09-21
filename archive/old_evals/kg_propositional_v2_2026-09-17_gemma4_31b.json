@@ -1,0 +1,82 @@
+{
+  "semantic": [
+    {
+      "subject": "User",
+      "relation": "has_role",
+      "object": "Senior Tech Executive"
+    },
+    {
+      "subject": "User",
+      "relation": "has_personality_type",
+      "object": "ENTJ"
+    },
+    {
+      "subject": "User",
+      "relation": "possesses_degree",
+      "object": "Doctor of Engineering"
+    },
+    {
+      "subject": "User",
+      "relation": "values",
+      "object": "Logic and Facts"
+    },
+    {
+      "subject": "User",
+      "relation": "understands",
+      "object": "Empathy in leadership"
+    },
+    {
+      "subject": "Taste-based professions",
+      "relation": "perceived_as",
+      "object": "Made up/Arbitrary"
+    },
+    {
+      "subject": "Taste",
+      "relation": "is_a_form_of",
+      "object": "Specialized data processing"
+    },
+    {
+      "subject": "Taste system",
+      "relation": "requires",
+      "object": "Sensory acuity"
+    },
+    {
+      "subject": "Taste system",
+      "relation": "requires",
+      "object": "Pattern recognition"
+    },
+    {
+      "subject": "Taste system",
+      "relation": "requires",
+      "object": "Shared lexicons"
+    }
+  ],
+  "episodic": [
+    {
+      "subject": "User",
+      "relation": "expressed_skepticism_about",
+      "object": "Taste-making professions",
+      "step": 1
+    },
+    {
+      "subject": "AI",
+      "relation": "analyzed",
+      "object": "User's engineering mindset and need for objective criteria",
+      "step": 2
+    },
+    {
+      "subject": "AI",
+      "relation": "developed_framework",
+      "object": "Reframing taste as information processing",
+      "step": 3
+    },
+    {
+      "subject": "AI",
+      "relation": "connected",
+      "object": "Subjective quality to economic worth via intersubjective agreements",
+      "step": 4
+    }
+  ],
+  "procedural": [],
+  "active": []
+}

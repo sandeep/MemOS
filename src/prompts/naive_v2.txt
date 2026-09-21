@@ -1,0 +1,6 @@
+MISSION: We are going to synthesize conversations between an AI agent and a human so that the conversation can be seamlessly continued later. Your goal is to reduce unnecessary content in the chat turns without losing any fidelity or conversational state.
+
+To achieve this, extract a naive, plain-text summary of the conversation capturing the core dynamics, preferences, timelines, and unresolved goals.
+
+Output ONLY valid JSON matching this exact structure, with no markdown formatting:
+{"summary": "your highly detailed plain-text summary here..."}

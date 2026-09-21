@@ -1,0 +1,173 @@
+1.  **Analyze the Request:**
+   - **Role:** Strict data formatter
+   - **Task:** Convert given text into a valid JSON object matching a specific schema exactly
+   - **Schema:** `{"semantic_memory": {"nodes": [], "edges": []}, "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []}, "procedural_memory": {"instructions": []}, "active_state": {"current_goal": "", "blockers": [], "next_action": ""}}`
+   - **Constraints:** 
+     - Output ONLY valid JSON
+     - Use double quotes for keys
+     - No markdown formatting
+     - Must match the schema exactly
+
+2.  **Analyze the Input Text:**
+   The input is a JSON-like structure, but it's not matching the target schema. It has keys like "semantic", "episodic", "procedural", "active" with different nested structures. I need to map the content from the input to the exact output schema provided.
+
+   Let's break down the schema:
+   ```json
+   {
+     "semantic_memory": {"nodes": [], "edges": []},
+     "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []},
+     "procedural_memory": {"instructions": []},
+     "active_state": {"current_goal": "", "blockers": [], "next_action": ""}
+   }
+   ```
+
+   Now, I need to extract/convert the input text into this structure. The input has content that needs to be placed into the appropriate fields. Since the schema has empty arrays/strings as defaults, I need to map the input data into these fields appropriately, or perhaps the task is to strictly conform the input to the schema, possibly by extracting/reorganizing the data.
+
+   Let's look at the input content and figure out how to map it:
+
+   **Input "semantic" section:**
+   - `entities`: key-value pairs describing User, Taste-based Professions, Taste
+   - `relationships`: list of {subject, predicate, object}
+
+   **Input "episodic" section:**
+   - `sequence`: list of {event, description}
+
+   **Input "procedural" section:**
+   - `strategies`: list of {method, logic}
+
+   **Input "active" section:**
+   - `current_goals`: list of strings
+   - `immediate_focus`: string
+
+   **Target schema mapping:**
+   - `semantic_memory.nodes` : ? Probably entities or nodes derived from entities/relationships
+   - `semantic_memory.edges` : ? Probably relationships
+   - `episodic_ledger.events` : Probably the events from episodic sequence
+   - `episodic_ledger.decisions` : Not explicitly in input, maybe empty or derived
+   - `episodic_ledger.rejected_branches` : Not explicitly in input, maybe empty
+   - `procedural_memory.instructions` : Probably the strategies or methods
+   - `active_state.current_goal` : Probably one goal or the immediate_focus
+   - `active_state.blockers` : Maybe empty or derived from current_goals conflict
+   - `active_state.next_action` : Maybe empty or derived
+
+   The instruction says: "Convert the following text into a valid JSON object matching this schema exactly". It doesn't specify exactly how to map the content, but as a strict data formatter, I need to produce valid JSON that matches the schema. The schema has specific field names and types: 
+   - `semantic_memory`: object with `nodes` (array) and `edges` (array)
+   - `episodic_ledger`: object with `events` (array), `decisions` (array), `rejected_branches` (array)
+   - `procedural_memory`: object with `instructions` (array)
+   - `active_state`: object with `current_goal` (string), `blockers` (array), `next_action` (string)
+
+   I need to map the input data into these fields. Since the schema is quite rigid and the input has different structure, I'll need to extract or reorganize the data to fit. The safest approach as a "strict data formatter" is to map the relevant parts of the input into the schema fields, and leave empty/default values for fields that don't have a direct counterpart, or perhaps the task expects me to transform the input content into the schema's structure.
+
+   Let's think about standard mapping:
+   - `semantic_memory.nodes`: Could contain the entities from input's semantic.entities, or nodes derived from relationships. I'll put the entity keys or values. But nodes typically are identifiers. Maybe I'll put the entity names as nodes.
+   - `semantic_memory.edges`: Relationships from input's semantic.relationships. Each relationship has subject, predicate, object. I can format as edges.
+   - `episodic_ledger.events`: The event descriptions or event names from input's episodic.sequence. I'll put the event names or descriptions.
+   - `episodic_ledger.decisions`: Not in input. I'll leave as empty array `[]`.
+   - `episodic_ledger.rejected_branches`: Not in input. I'll leave as `[]`.
+   - `procedural_memory.instructions`: The strategies from input's procedural.strategies. I'll map method+logic or just the methods.
+   - `active_state.current_goal`: Could be the immediate_focus or one of the current_goals. The schema expects a string. I'll use the `immediate_focus` string, or maybe combine current_goals. I'll pick the `immediate_focus` as it's a single string.
+   - `active_state.blockers`: Not explicitly present. I'll leave as `[]`. Or maybe derive from current_goals conflict. I'll stick to `[]`.
+   - `active_state.next_action`: Not present. I'll leave as `""`.
+
+   Wait, the instruction says "Convert the following text into a valid JSON object matching this schema exactly". It might mean I should just output the schema with the input data filled in where possible, strictly following the schema structure. Since it's a strict formatter, I should not add fields outside the schema, and should use exact key names.
+
+   Let's re-read carefully: "Output ONLY valid JSON. Do not use single quotes for keys, use double quotes. No markdown formatting." and the schema is given. The input text is provided. I need to convert the input text into that schema.
+
+   I think the intent is to take the content from the input and restructure it to fit the output schema. I'll map logically:
+
+   - `semantic_memory.nodes`: Extract from input's semantic.entities keys or values. I'll use the entity names as nodes. Maybe `["User", "Taste-based Professions", "Taste"]`.
+   - `semantic_memory.edges`: Extract from input's semantic relationships. I'll format each as an object or string? The schema says `edges: []`, typically edges are objects with source, target, label. I'll put the relationships as an array of objects matching the schema's edge expectation. But the schema just says `edges: []`, no specification of edge structure. I'll assume they can be the relationship objects, or I'll simplify. To be safe, I'll put the relationships array as is, but the input relationships have `subject, predicate, object`. I'll map them to `["subject", "predicate", "object"]` format, or just keep the objects. Since the schema doesn't specify edge format, I'll use the input relationship objects.
+   - `episodic_ledger.events`: The events from episodic sequence. The input has `sequence` with `event` and `description`. I'll put the `event` names or the full objects. I'll use the event descriptions or names. I'll put an array of objects `{event: "...", description: "..."}` but the schema just says `events: []`. I'll assume `events` are the event descriptions or names. I'll extract the `event` strings.
+   - `episodic_ledger.decisions`: `[]`
+   - `episodic_ledger.rejected_branches`: `[]`
+   - `procedural_memory.instructions`: From procedural strategies. I'll map the `method` and `logic` or just `method`. I'll put an array of objects with `method` and `logic`, or just strings. To match `instructions: []`, I'll put the strategies as objects.
+   - `active_state.current_goal`: I'll use the `immediate_focus` string: "Connecting the dots between subjective sensory input and the objective creation of economic value."
+   - `active_state.blockers`: `[]`
+   - `active_state.next_action`: `""`
+
+   Let's reconsider. The prompt might be a test of whether I can strictly output the schema with the input data mapped, or perhaps it's a trick where I just need to output the schema with empty arrays/strings because the input doesn't perfectly map, but the instruction says "Convert the following text into a valid JSON object matching this schema exactly". This implies I must incorporate the text content into the schema structure.
+
+   Maybe the expected output is simply the schema with the input's data reorganized. I'll do my best to map it faithfully.
+
+   Let's map systematically:
+
+   **semantic_memory:**
+   - `nodes`: I'll extract the entity names from input's `semantic.entities`: `["User", "Taste-based Professions", "Taste"]`
+   - `edges`: I'll extract the relationships from input's `semantic.relationships`: each has `subject`, `predicate`, `object`. I'll output them as an array of objects: `[{"subject": "User", "predicate": "skeptical of", "object": "Taste-based Professions"}, ...]`
+
+   **episodic_ledger:**
+   - `events`: I'll extract the events from input's `episodic.sequence`. Each has `event` and `description`. I'll output the `event` strings or the objects. I'll output `[{"event": "User Request", "description": "..."}, ...]` but the schema just says `events: []`. Maybe `events` should just be the event names: `["User Request", "AI Persona Analysis", "Framework Development"]`. I'll go with the event names as strings, or maybe include descriptions. To be safe, I'll use the event descriptions or the full objects. Given it's a "ledger", events likely have descriptions. I'll output `[{"event": "User Request", "description": "User asks an erudite philosopher..."}, ...]` but wait, the schema says `events: []` without specification. I'll assume it's an array of strings or objects. I'll check typical JSON ledger: events could be strings. I'll output the event names as strings: `["User Request", "AI Persona Analysis", "Framework Development"]`. Or I'll output the descriptions. I think the safest is to output the event names as an array of strings, since the schema doesn't specify structure beyond being an array.
+   - `decisions`: `[]`
+   - `rejected_branches`: `[]`
+
+   **procedural_memory:**
+   - `instructions`: From procedural strategies. Each has `method` and `logic`. I'll output an array of objects: `[{"method": "Persona Mapping", "logic": "..."}, ...]`. Or maybe just the method strings. I'll output objects with method and logic, as that's the content.
+
+   **active_state:**
+   - `current_goal`: I'll use the `immediate_focus` string.
+   - `blockers`: `[]`
+   - `next_action`: `""`
+
+   Let's re-read the exact schema: `{"semantic_memory": {"nodes": [], "edges": []}, "episodic_ledger": {"events": [], "decisions": [], "rejected_branches": []}, "procedural_memory": {"instructions": []}, "active_state": {"current_goal": "", "blockers": [], "next_action": ""}}`
+
+   The schema has specific types: `nodes` and `edges` are arrays, `events`, `decisions`, `rejected_branches` are arrays, `instructions` is array, `current_goal` and `next_action` are strings, `blockers` is array.
+
+   I need to ensure the output is valid JSON, double quotes only, no markdown.
+
+   I'll construct the JSON carefully.
+
+   Let's decide on exact mappings:
+
+   `semantic_memory.nodes`: I'll put the entity names from input's semantic.entities. The input has `"User": "..."`, `"Taste-based Professions": "..."`, `"Taste": "..."`. I'll extract the keys: `["User", "Taste-based Professions", "Taste"]`.
+
+   `semantic_memory.edges`: I'll put the relationships. Input has three relationships. I'll format as `[{"subject": "User", "predicate": "skeptical of", "object": "Taste-based Professions"}, {"subject": "Taste", "predicate": "is reframed as", "object": "Information processing system"}, {"subject": "Subjective quality", "predicate": "is converted to", "object": "Economic worth via intersubjective agreements"}]`.
+
+   `episodic_ledger.events`: I'll put the event names from input's episodic sequence: `["User Request", "AI Persona Analysis", "Framework Development"]`. Or should I include descriptions? The schema just says `events: []`. I'll assume it's an array of strings (event names). I'll go with that.
+
+   `episodic_ledger.decisions`: `[]`
+   `episodic_ledger.rejected_branches`: `[]`
+
+   `procedural_memory.instructions`: I'll put the strategies. Input has three strategies with method and logic. I'll output `[{"method": "Persona Mapping", "logic": "Analyze user's professional and academic background to align the response's tone and structure with their cognitive style."}, {"method": "Conceptual Reframing", "logic": "Translate a subjective concept (taste) into a technical framework (data processing/pattern recognition) to make it palatable to a logical mindset."}, {"method": "Value Justification", "logic": "Explain the transition from subjective experience to economic value through the lens of shared lexicons and intersubjective agreements."}]`. But the schema says `instructions: []`. It might expect just strings. I'll check: "instructions" could be an array of strings. I'll output the method strings: `["Persona Mapping", "Conceptual Reframing", "Value Justification"]`. Or maybe the full objects. To be safe and strict, since the schema doesn't specify inner structure, I'll assume it's an array of strings. But the input has method+logic. I'll output objects with `method` and `logic` because that preserves the data better, and the schema's `[]` just means it's an array. Many JSON schemas allow objects in arrays. I'll output objects. Actually, the prompt says "matching this schema exactly". The schema has `"instructions": []`. If I put objects, it's still valid JSON array, but does it "match exactly"? It might mean the keys and types must match, but the array elements' structure isn't specified, so any valid elements are fine. I'll output the strategies as objects with `method` and `logic`, as that's the content. Alternatively, I could output just the method strings. I'll think about what a "strict data formatter" would do. Probably map the data faithfully while respecting the top-level keys and their array/string types. I'll use objects for instructions, as the input has key-value pairs.
+
+   `active_state.current_goal`: The input has `current_goals` array and `immediate_focus` string. The schema expects `current_goal: ""` (string). I'll use the `immediate_focus` string: `"Connecting the dots between subjective sensory input and the objective creation of economic value."`.
+
+   `active_state.blockers`: `[]`
+   `active_state.next_action`: `""`
+
+   Let's construct the final JSON:
+
+   ```json
+   {
+     "semantic_memory": {
+       "nodes": ["User", "Taste-based Professions", "Taste"],
+       "edges": [
+         {"subject": "User", "predicate": "skeptical of", "object": "Taste-based Professions"},
+         {"subject": "Taste", "predicate": "is reframed as", "object": "Information processing system"},
+         {"subject": "Subjective quality", "predicate": "is converted to", "object": "Economic worth via intersubjective agreements"}
+       ]
+     },
+     "episodic_ledger": {
+       "events": ["User Request", "AI Persona Analysis", "Framework Development"],
+       "decisions": [],
+       "rejected_branches": []
+     },
+     "procedural_memory": {
+       "instructions": [
+         {"method": "Persona Mapping", "logic": "Analyze user's professional and academic background to align the response's tone and structure with their cognitive style."},
+         {"method": "Conceptual Reframing", "logic": "Translate a subjective concept (taste) into a technical framework (data processing/pattern recognition) to make it palatable to a logical mindset."},
+         {"method": "Value Justification", "logic": "Explain the transition from subjective experience to economic value through the lens of shared lexicons and intersubjective agreements."}
+       ]
+     },
+     "active_state": {
+       "current_goal": "Connecting the dots between subjective sensory input and the objective creation of economic value.",
+       "blockers": [],
+       "next_action": ""
+     }
+   }
+   ```
+
+   Wait, I need to double-check if the schema expects specific formats for edges/nodes/events/instructions. The schema is given as `{"semantic_memory": {"nodes": [], "edges": []}, ...}`. The `[]` just indicates arrays. The actual content can be any valid JSON within those arrays, as long as it's an array. The instruction says "Convert the following text into a valid JSON object matching this schema exactly". This likely means the output must have exactly those top-level keys, and the nested keys with the correct types (arrays of strings/objects, strings). I'll ensure the types match.
+
+   Let's review the input text's structure again to ensure I'm not missing any nuance. The input is a valid JSON itself, but with different keys. The task is to convert it to the target schema. I think my mapping is reasonable.
+
+   One potential issue: The schema has `episodic_ledger: {"events": [], "decisions": [], "rejected_branches": []}`. My

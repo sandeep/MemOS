@@ -1,0 +1,234 @@
+Here's a thinking process:
+
+1.  **Analyze User Input:**
+   - User wants me to act as a Recursive Language Model (RLM)
+   - I have access to a Python REPL
+   - `transcript` variable contains the raw conversation
+   - `llm_query(prompt: str) -> str` function is available
+   - Goal: Extract a 4-part Knowledge Graph (Semantic, Episodic, Procedural, Active)
+   - Output Python code wrapped in ```python ... ```
+   - Requirements:
+     1. Peek at transcript
+     2. Discover domain
+     3. Loop through text, use `llm_query` to extract data
+     4. Save valid JSON graph to `output_rlm.json`
+   - Critical Rules:
+     1. Must actually call extraction logic at end, not just define functions
+     2. Bounded loops, quick completion, recursion depth 1-2 levels max
+     3. Handle JSON decoding gracefully, use `re.search(r'\{.*\}', response, re.DOTALL)` to extract JSON block before `json.loads()`
+     4. Do NOT define/mock `llm_query`, it's already injected
+     5. If using f-strings with JSON examples, escape curly braces as `{{` and `}}`
+     6. Must implement checkpointing and resumption! Save intermediate progress after EVERY chunk. At start, check if `output_rlm.json` exists and load it to skip already-processed chunks.
+
+   - Output: Just the Python code, no explanation.
+
+2.  **Deconstruct the Task:**
+   - I need to write a Python script that:
+     - Loads `transcript` (already available in environment)
+     - Checks for existing `output_rlm.json` for checkpointing
+     - Discovers domain (probably from transcript or first part)
+     - Loops through text in chunks
+     - Uses `llm_query` to extract 4 parts of knowledge graph
+     - Extracts JSON from LLM response using regex
+     - Saves progress after each chunk
+     - At the end, saves final `output_rlm.json`
+   - Key constraints: 
+     - Must actually run the logic
+     - Bounded loops
+     - Regex extraction of JSON
+     - Checkpointing after every chunk
+     - Escape curly braces in f-strings if using JSON examples
+     - No mocking `llm_query`
+
+3.  **Design the Python Script Structure:**
+   - Import json, re, os
+   - Load `transcript` (it's given as variable, so I don't need to read from file, but I can assume it's in scope)
+   - Check if `output_rlm.json` exists, load it to get processed chunks/resume point
+   - Define chunk size (e.g., 1000 words or sentences, but bounded)
+   - Discover domain: maybe first chunk or a separate prompt
+   - Loop through transcript chunks
+   - For each unprocessed chunk:
+     - Construct prompt for `llm_query`
+     - Call `llm_query`
+     - Use regex `re.search(r'\{.*\}', response, re.DOTALL)` to find JSON block
+     - Parse with `json.loads()`
+     - Merge into overall graph structure
+     - Save `output_rlm.json` immediately after each chunk
+   - Final save (should already be done by checkpointing)
+
+   - Need to be careful about the prompt construction. The 4 parts: Semantic, Episodic, Procedural, Active. I'll need to ask the LLM to output JSON with those keys.
+
+   - Prompt design: I'll use a template that includes the chunk and asks for JSON output with those 4 keys. Since I'm using f-strings, I need to escape any curly braces. The JSON example in the prompt will have `{` and `}`, so I'll need to double them `{{` and `}}` in the f-string.
+
+   - Let's outline the prompt:
+     ```
+     Extract a 4-part Knowledge Graph from this text chunk. Output MUST be a single JSON object with exactly 4 keys: "semantic", "episodic", "procedural", "active". Each should be a string or array. 
+     Text: {{chunk}}
+     ```
+     In f-string: `f"Text: {{chunk}}"` - wait, if I use `{{chunk}}` in f-string, it becomes `{chunk}`. That's what I want if I'm constructing a prompt that literally has `{chunk}`. But actually, I want to insert the chunk text. I need to be careful.
+
+     Standard approach: Build prompt string without f-string for the JSON part, or use `.format()` or string concatenation. But rule 5 says: "If you construct LLM prompts using Python f-strings (`f"..."`), you MUST escape literal curly braces as `{{` and `}}` when including JSON examples". So I'll use f-strings but ensure any `{` or `}` in the prompt template are doubled if they're meant to be literal.
+
+     Better: I'll construct the prompt using f-strings but the chunk text will be inserted via variable, not via `{}` in the f-string pattern, or I'll use `{{` and `}}` for any literal braces in the template.
+
+     Let's design the prompt text carefully:
+     ```
+     You are to extract a 4-part Knowledge Graph (Semantic, Episodic, Procedural, Active) from the following text chunk. Output exactly one valid JSON object with these four keys. Each value should be a concise string summarizing that aspect.
+
+     Text:
+     {{chunk_text}}
+     ```
+     If I use `f"..."`, and I write `{{chunk_text}}`, the f-string will convert `{{` to `{` and `}}` to `}`, so the LLM prompt will see `{chunk_text}`. That's perfect. But wait, the rule says "escape literal curly braces as `{{` and `}}` when including JSON examples". So if my prompt template has `{` and `}` as literal braces (like in JSON structure in the prompt), I need to double them. But if I'm inserting the chunk text, I'll just use a variable and concatenate, or use `{{chunk_text}}` in f-string to produce `{chunk_text}` for the LLM.
+
+     Actually, let's just avoid f-strings for the large JSON template, or use them minimally. I can build the prompt using string concatenation or triple-quoted raw strings, but the rule specifically mentions f-strings. I'll use f-strings but be very careful.
+
+     Simpler: I'll construct the prompt like this:
+     ```python
+     prompt = f"""Extract a 4-part Knowledge Graph from this text. Output JSON with keys: semantic, episodic, procedural, active.
+
+     Text: {chunk}
+     """
+     ```
+     Here, `{chunk}` is the f-string placeholder. The LLM receives the actual chunk text. No need to double braces because the `{chunk}` is the placeholder, not a literal brace in the output. But the prompt text has `JSON with keys: semantic, episodic, procedural, active` - no braces there except the colon keys. The output JSON will be handled by the regex extraction. So the prompt itself doesn't need to contain a JSON example with braces, just the instruction. To be safe, I'll avoid putting actual `{` and `}` in the prompt template that are meant literally, except maybe for the JSON keys list. I can write `semantic, episodic, procedural, active` without braces.
+
+     Wait, rule 5: "If you construct LLM prompts using Python f-strings (`f"..."`), you MUST escape literal curly braces as `{{` and `}}` when including JSON examples, otherwise Python will throw a format string error!" This implies if I include a JSON example inside the f-string, I need to escape braces. I'll just not include a full JSON example in the prompt, or if I do, I'll escape. To keep it simple, I'll construct the prompt without embedding JSON syntax in the f-string braces. I'll just use placeholders.
+
+     Let's design the prompt simply:
+     ```
+     Extract a 4-part Knowledge Graph (Semantic, Episodic, Procedural, Active) from the following text. Output exactly one JSON object with keys "semantic", "episodic", "procedural", "active" and string values. No other text.
+
+     TEXT:
+     {text}
+     ```
+     In Python f-string: `f"Extract ... OUTPUT JSON with keys ... TEXT: {text}"`. Here `{text}` is the f-string variable. The LLM prompt will have the actual text. No literal braces to escape. Perfect.
+
+     But wait, if I need to include the JSON keys inside the prompt as an example, I might write `keys: {semantic, episodic, procedural, active}` but that uses braces. I'll just avoid it and list them as plain text.
+
+     Let's proceed with design.
+
+   - Checkpointing: I'll save a JSON structure that includes `chunks_processed` count or last processed index. On restart, load it and skip those chunks.
+
+   - Transcript format: Not specified. I'll assume it's a string, possibly with line breaks. I'll split into chunks of, say, 500 words or 1000 characters, but bounded. I'll use character count for simplicity and boundedness.
+
+   - The 4-part Knowledge Graph structure:
+     ```json
+     {
+       "semantic": "...",
+       "episodic": "...",
+       "procedural": "...",
+       "active": "..."
+     }
+     ```
+     Or maybe each is an object, but I'll keep as strings for simplicity, or arrays. The task says "4-part Knowledge Graph (Semantic, Episodic, Procedural, Active)". I'll output a dict with those 4 keys.
+
+   - Regex extraction: `re.search(r'\{.*\}', response, re.DOTALL)` to get the first `{...}` block. Then `json.loads()` on that.
+
+   - Error handling: If regex fails, skip chunk or retry. I'll add a try/except.
+
+   - The script must actually call the extraction logic at the end. I'll structure it so there's a `main()` or direct execution that processes everything.
+
+   - Let's write the code step by step in my mind:
+
+     ```python
+     import json
+     import re
+     import os
+
+     # transcript is already available as a variable in the environment
+     # llm_query is already injected
+
+     # Checkpoint file
+     CHECKPOINT = "output_rlm.json"
+
+     # Load checkpoint if exists
+     if os.path.exists(CHECKPOINT):
+         with open(CHECKPOINT, "r") as f:
+             state = json.load(f)
+         transcript = state.get("transcript", transcript)  # but transcript is already there
+         start_idx = state.get("last_idx", 0)
+         accumulated_graph = state.get("graph", {})
+     else:
+         start_idx = 0
+         accumulated_graph = {
+             "semantic": "",
+             "episodic": "",
+             "procedural": "",
+             "active": ""
+         }
+
+     # Chunk size: bounded, e.g., 2000 characters
+     chunk_size = 2000
+     total_len = len(transcript)
+     num_chunks = (total_len // chunk_size) + 1
+
+     # Discover domain: maybe from first chunk or a separate prompt. I'll just include it in the process.
+
+     for i in range(start_idx, num_chunks):
+         start = i * chunk_size
+         end = start + chunk_size
+         chunk = transcript[start:end]
+         if not chunk.strip():
+             continue
+
+         # Prompt for LLM
+         prompt = f"""Extract a 4-part Knowledge Graph (Semantic, Episodic, Procedural, Active) from the following text chunk. Output exactly one JSON object with keys "semantic", "episodic", "procedural", "active" and concise string values for each. No other text.
+
+         Text:
+         {chunk}
+         """
+
+         response = llm_query(prompt)
+
+         # Extract JSON block using regex
+         match = re.search(r'\{.*\}', response, re.DOTALL)
+         if match:
+             json_str = match.group(0)
+             try:
+                 chunk_graph = json.loads(json_str)
+                 # Merge into accumulated_graph
+                 # Assuming we want to accumulate or overwrite; I'll overwrite or append as needed.
+                 # To keep it simple, I'll merge keys if they are strings, or take the latest.
+                 for key in accumulated_graph:
+                     if key in chunk_graph and isinstance(accumulated_graph[key], str):
+                         # append or just take new? I'll just take the latest for simplicity, or accumulate with separator.
+                         accumulated_graph[key] += " " + chunk_graph[key]
+                     else:
+                         accumulated_graph[key] = chunk_graph.get(key, "")
+             except json.JSONDecodeError:
+                 pass  # skip this chunk's graph
+
+         # Checkpoint save after every chunk
+         with open(CHECKPOINT, "w") as f:
+             json.dump({
+                 "last_idx": i + 1,
+                 "graph": accumulated_graph,
+                 "transcript_len": total_len  # maybe not needed
+             }, f, indent=2)
+
+     # Final save (already done by checkpoint, but ensure)
+     with open("output_rlm.json", "w") as f:
+         json.dump(accumulated_graph, f, indent=2)
+     ```
+
+     Wait, need to check rules:
+     - "You must ACTUALLY CALL the extraction logic at the end of your script. Do not just define functions and leave them commented out." -> I'll have the code run directly, not just definitions.
+     - "Ensure your loops are bounded and will complete quickly. Keep recursion depth to 1-2 levels max." -> My loop is a simple for loop, no recursion. Bounded by num_chunks.
+     - "Handle JSON decoding gracefully. The model WILL output Chain-of-Thought text before the JSON! You MUST use a robust regex like `re.search(r'\{.*\}', response, re.DOTALL)` to extract the JSON block before calling `json.loads()`." -> I have that.
+     - "Do NOT define or mock the `llm_query` function yourself. It is already injected into your environment. Just call it." -> I just call `llm_query(prompt)`.
+     - "If you construct LLM prompts using Python f-strings (`f"..."`), you MUST escape literal curly braces as `{{` and `}}` when including JSON examples, otherwise Python will throw a format string error!" -> I need to check my prompt. In my f-string, I have `f"""... Text: {chunk} ...""`. The `{chunk}` is the f-string placeholder. I also have `"semantic", "episodic", "procedural", "active"` inside the f-string, but those are inside double quotes of the string, not curly braces. Wait, the f-string uses `{}` for interpolation. If I have literal `{` or `}` in the prompt text that are not placeholders, I need to double them. In my prompt, the only `{}` are the f-string placeholder `{chunk}`. The JSON keys are written as `"semantic", "episodic", "procedural", "active"` - no braces there. The instruction text has no braces. So it should be fine. But to be absolutely safe, if I have any `{` in the prompt template that are meant literally (like if I wrote `{` somewhere), I'd need `{{`. I'll double-check the prompt.
+
+     Let's revise the prompt to avoid any accidental braces:
+     ```python
+     prompt = f"""Extract a 4-part Knowledge Graph (Semantic, Episodic, Procedural, Active) from the following text chunk. Output exactly one JSON object with keys "semantic", "episodic", "procedural", "active" and concise string values for each. No other text.
+
+     Text:
+     {chunk}
+     """
+     ```
+     Here, `{chunk}` is the placeholder. The rest has no `{` or `}` except the ones in the string `"Semantic, Episodic, Procedural, Active"`? No, those are just letters. The parentheses `(` `)` are fine. The double quotes `"` are fine. So no need to escape.
+
+     But wait, the rule says "when including JSON examples". I'm not including a JSON example in the prompt; I'm just instructing the output format. That should be fine.
+
+     - "You MUST implement checkpointing and resumption! Save intermediate progress to `output_rlm.json` after processing EVERY chunk. At the start of your script, check if `output_rlm.json` already exists and load it so you can skip chunks you have already processed!" -> I have that.
+
+     One thing: The checkpoint file is `output_rlm.json`, and the final output is also `output_rlm.json`. The rule says "Save intermediate progress to `output_rlm.json` after processing EVERY chunk." And "Save a valid JSON graph to `output_rlm.json`." At the end, I need to save the final graph. The checkpoint format I designed saves `graph` inside `output_rlm.json`. That should satisfy both: intermediate progress and final output. But I need to make sure the final `output_rlm.json` is a "valid JSON graph". The rule says "Saves a valid JSON graph to `output_rlm.json`." and "Save intermediate progress to `output_rlm.json` after processing EVERY chunk." It might be that the checkpoint JSON should contain the graph, and at the end, the same file is the graph. I'll structure the checkpoint to contain the graph directly or nested. To be safe, I'll save the graph as the top-level content, but also include checkpoint metadata. Or I could have the checkpoint include a `graph` key, and at the end, the file contains just the graph. But the rule says "Save intermediate progress to `output_rlm.json` after processing EVERY chunk." It doesn't say the file must be purely the graph at all times; it just says "Saves a valid JSON graph to `output_rlm.json`" as the goal, and checkpointing after every chunk. I think it's fine to have the file contain the graph plus maybe metadata, or just the graph. I'll make the checkpoint save the accumulated graph as the main content, and add metadata like `last_idx` and `transcript_len` alongside it, or structure it so that `json.load()` can extract the graph. But to keep it simple and compliant, I'll save the graph dict directly after each chunk, but I also need checkpointing for resumption. So I'll include `last_idx` and `graph`. The final save will just output the graph. Actually, re-read: "Saves a valid JSON graph to `output_rlm.json`." This is the end goal. "Save intermediate

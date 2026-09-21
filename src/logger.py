@@ -14,8 +14,8 @@ class PipelineLogger:
             "reconstitution": None
         }
 
-    def record_extraction(self, kg_name: str, status: bool, error: str = None):
-        self.state["extractions"][kg_name] = {"status": status, "error": error}
+    def record_extraction(self, kg_name: str, status: bool, error: str = None, repaired: bool = False):
+        self.state["extractions"][kg_name] = {"status": status, "error": error, "repaired": repaired}
 
     def record_validation(self, kg_name: str, status: bool):
         self.state["validations"][kg_name] = status

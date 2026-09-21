@@ -3,9 +3,9 @@ import time
 import requests
 import hashlib
 
-NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+NVIDIA_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", temp: float = 0.0, max_tokens: int = 4096, cache_dir: str = "llm_cache") -> str:
+def call_llm(prompt: str, model: str = "meta-llama/llama-3.1-70b-instruct", temp: float = 0.0, max_tokens: int = 4096, cache_dir: str = "llm_cache") -> str:
     """
     Unified LLM calling function that handles:
     1. Caching
@@ -21,9 +21,9 @@ def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", 
         with open(cache_file, "r") as f:
             return f.read()
 
-    api_key = os.environ.get("NVIDIA_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        print("ERROR: NVIDIA_API_KEY not set.")
+        print("ERROR: OPENROUTER_API_KEY not set.")
         return ""
         
     headers = {
@@ -39,7 +39,7 @@ def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", 
     
     for attempt in range(5):
         try:
-            response = requests.post(NVIDIA_URL, headers=headers, json=payload, timeout=45)
+            response = requests.post(NVIDIA_URL, headers=headers, json=payload, timeout=180)
             response.raise_for_status()
             text = response.json()["choices"][0]["message"]["content"].strip()
             
@@ -54,6 +54,14 @@ def call_llm(prompt: str, model: str = "nvidia/nemotron-3.5-lightning-30b-a3b", 
                     if "\n\n" in text:
                         text = "\n\n".join(text.split("\n\n")[1:])
             
+            # Strip markdown json blocks if present
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+                
             text = text.strip()
             
             # Save to cache

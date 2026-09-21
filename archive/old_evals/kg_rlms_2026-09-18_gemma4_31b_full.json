@@ -1,0 +1,91 @@
+{
+  "semantic_memory": {
+    "nodes": [
+      {
+        "id": "call_llm",
+        "type": "function",
+        "description": "Placeholder for LLM API call to extract 4-part KG"
+      },
+      {
+        "id": "extract_kg",
+        "type": "function",
+        "description": "Processes transcript chunks to build a Knowledge Graph state and saves to disk"
+      },
+      {
+        "id": "TRANSCRIPT_FILE",
+        "type": "constant",
+        "value": "transcript.json"
+      },
+      {
+        "id": "OUTPUT_FILE",
+        "type": "constant",
+        "value": "data/working/evaluations/test-case-conversation/kg_rlms_2026-09-18_gemma4_31b_full.json"
+      }
+    ],
+    "edges": [
+      {
+        "source": "extract_kg",
+        "target": "call_llm",
+        "relation": "calls"
+      },
+      {
+        "source": "extract_kg",
+        "target": "TRANSCRIPT_FILE",
+        "relation": "reads"
+      },
+      {
+        "source": "extract_kg",
+        "target": "OUTPUT_FILE",
+        "relation": "writes"
+      }
+    ]
+  },
+  "episodic_ledger": {
+    "events": [
+      {
+        "event": "script_execution",
+        "description": "The script loads a transcript, iterates through chunks, calls an LLM for extraction, and saves the state incrementally."
+      }
+    ],
+    "decisions": [
+      {
+        "decision": "incremental_saving",
+        "reasoning": "Aggressively save after every single chunk to prevent data loss."
+      }
+    ],
+    "rejected_branches": []
+  },
+  "procedural_memory": {
+    "instructions": [
+      {
+        "step": 1,
+        "action": "Load transcript from TRANSCRIPT_FILE"
+      },
+      {
+        "step": 2,
+        "action": "Iterate through chunks in chunkedPrompt"
+      },
+      {
+        "step": 3,
+        "action": "Construct prompt with role and text for LLM extraction"
+      },
+      {
+        "step": 4,
+        "action": "Call call_llm function to get semantic, episodic, procedural, and active data"
+      },
+      {
+        "step": 5,
+        "action": "Extend kg_state with extracted data"
+      },
+      {
+        "step": 6,
+        "action": "Write current kg_state to OUTPUT_FILE"
+      }
+    ]
+  },
+  "active_state": {
+    "current_goal": "Extract Knowledge Graph from transcript and save to JSON file",
+    "blockers": [],
+    "next_action": "Execute extract_kg(TRANSCRIPT_FILE, OUTPUT_FILE)"
+  }
+}

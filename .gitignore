@@ -1,0 +1,8 @@
+
+# Pipeline artifacts and caches
+llm_cache/
+data/
+*.log
+scratch/
+test_results/
+venv/
